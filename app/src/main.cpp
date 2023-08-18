@@ -61,7 +61,7 @@ int main() {
 
         ImGui::ShowDemoWindow(NULL);
 
-        editWindow.draw();
+        editWindow.update();
 
         rlImGuiEnd();
         EndDrawing();
