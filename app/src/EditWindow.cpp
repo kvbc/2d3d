@@ -6,6 +6,7 @@
 #include "raymath.h"
 #include "rlgl.h"
 #include <algorithm>
+#include "tesselator.h"
 
 namespace App {
     EditWindow::Shape::Shape() {}
@@ -99,6 +100,17 @@ namespace App {
                 shape.points.push_back(mouseGridPos);
             size_t endIndex = shape.points.size() - 1;
 
+            // Draw fill
+            if(shape.isComplete) {
+                std::vector<Vector2> worldPoints;
+                for(const Vector2& gridPoint : shape.points) {
+                    Vector2 worldPoint = getGridToWorldPosition(gridPoint);
+                    worldPoints.push_back(worldPoint);
+                }
+                // DrawTriangleFan(worldPoints.data(), worldPoints.size(), BLUE);
+                
+            }
+
             // Draw lines (connections)
             for(size_t i = 1; i < shape.points.size(); i++) {
                 const Vector2& gridPoint = shape.points[i];
@@ -133,7 +145,14 @@ namespace App {
                 shape.points.pop_back();
         }
 
-        DrawCircle(0, 0, 20, RED);
+        // DrawCircle(0, 0, 20, RED);
+
+        // rlBegin(RL_TRIANGLES);
+        //     rlColor4ub(255, 0, 0, 255);
+        //     rlVertex2f(0, 0);
+        //     rlVertex2f(50,100);
+        //     rlVertex2f(100, 0);
+        // rlEnd();
 
         EndMode2D();
         EndTextureMode();

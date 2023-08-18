@@ -30,5 +30,7 @@ project (baseName)
 	
 	-- To link to a lib use link_to("LIB_FOLDER_NAME")
     link_to("../rlImGui/_bin/Debug/rlImGui")
+    link_to("../libtess2/Build/tess2")
     includedirs { "../rlImGui/" }
-    includedirs { "../rlImGui/imgui-docking" }
+    includedirs { "../rlImGui/imgui-docking/" }
+    includedirs { "../libtess2/Include/" }

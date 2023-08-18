@@ -1,0 +1,31 @@
+{
+    "c-cpp-flylint.includePaths": [
+        "libtess2/Include",
+        "raylib/src",
+        "rlImGui",
+        "rlImGui/imgui-docking"
+    ],
+    "c-cpp-flylint.clang.includePaths": [
+        "libtess2/Include",
+        "raylib/src",
+        "rlImGui",
+        "rlImGui/imgui-docking"
+    ],
+    "c-cpp-flylint.cppcheck.includePaths": [
+        "libtess2/Include",
+        "raylib/src",
+        "rlImGui",
+        "rlImGui/imgui-docking"
+    ],
+    "C_Cpp.default.includePath": [
+        "libtess2/Include",
+        "raylib/src",
+        "rlImGui",
+        "rlImGui/imgui-docking"
+    ],
+    "files.associations": {
+        "*.h": "c",
+        "*.c": "c",
+        "vector": "cpp"
+    }
+}
