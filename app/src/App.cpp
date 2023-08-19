@@ -13,9 +13,9 @@ namespace App {
     }
 
     void App::Update() {
-        m_XEditWindow.update();
-        m_YEditWindow.update();
-        m_ZEditWindow.update();
+        m_XEditWindow.Update();
+        m_YEditWindow.Update();
+        m_ZEditWindow.Update();
     }
 
     Shape& App::GetShape(size_t idx) {

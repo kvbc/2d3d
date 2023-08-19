@@ -20,7 +20,7 @@ namespace App {
 
         EditWindow(std::string_view name, View view);
         ~EditWindow();
-        void update();
+        void Update();
 
     private:
         const float ZOOM_SENSITIVITY = 0.125;

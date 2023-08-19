@@ -115,21 +115,21 @@ namespace App {
             Shape& shape = App::Get().GetShape(shapeIdx);
             Vector2 mouseGridPoint = getMouseGridPosition();
             Vector3 mouseGridVertex = getPointToVertex(mouseGridPoint);
-            bool canAddVertex = shape.canAddVertex(mouseGridVertex);
-            if(!shape.isComplete())
-                shape.addVertex(mouseGridVertex);
-            size_t endIndex = shape.getVertexCount() - 1;
+            bool canAddVertex = shape.CanAddVertex(mouseGridVertex);
+            if(!shape.IsComplete())
+                shape.AddVertex(mouseGridVertex);
+            size_t endIndex = shape.GetVertexCount() - 1;
 
             // Draw fill
-            if(shape.isComplete()) {
+            if(shape.IsComplete()) {
                 std::vector<Vector2> gridPoints;
-                for(Vector3 gridVertex : shape.getVertices()) {
+                for(Vector3 gridVertex : shape.GetVertices()) {
                     Vector2 gridPoint = getVertexToPoint(gridVertex);
                     gridPoints.push_back(gridPoint);
                 }
                 gridPoints.pop_back();
                 std::vector<Vector2> tessGridPoints;
-                Tesselator::getInstance().tesselate(gridPoints, tessGridPoints);
+                Tesselator::Get().Tesselate(gridPoints, tessGridPoints);
 
                 std::vector<Vector2> tessWorldPoints;
                 for(const Vector2& gridPoint : tessGridPoints) {
@@ -148,15 +148,15 @@ namespace App {
             }
 
             // Draw lines (connections)
-            for(size_t i = 1; i < shape.getVertexCount(); i++) {
-                const Vector3& gridVertex = shape.getVertex(i);
-                const Vector3& prevGridVertex = shape.getVertex(i - 1);
+            for(size_t i = 1; i < shape.GetVertexCount(); i++) {
+                const Vector3& gridVertex = shape.GetVertex(i);
+                const Vector3& prevGridVertex = shape.GetVertex(i - 1);
                 Vector2 gridPoint = getVertexToPoint(gridVertex);
                 Vector2 prevGridPoint = getVertexToPoint(prevGridVertex);
                 Vector2 prevWorldPoint = getGridToWorldPosition(prevGridPoint);
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = {50, 50, 50, 255};
-                if(!shape.isComplete())
+                if(!shape.IsComplete())
                 if(i == endIndex) {
                     if(!canAddVertex)
                         color = RED;
@@ -166,12 +166,12 @@ namespace App {
             }
 
             // Draw circles
-            for(size_t i = 0; i < shape.getVertexCount(); i++) {
-                Vector3 gridVertex = shape.getVertex(i);
+            for(size_t i = 0; i < shape.GetVertexCount(); i++) {
+                Vector3 gridVertex = shape.GetVertex(i);
                 Vector2 gridPoint = getVertexToPoint(gridVertex);
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = GOLD;
-                if(!shape.isComplete())
+                if(!shape.IsComplete())
                 if(i == endIndex) {
                     if(!canAddVertex)
                         color = RED;
@@ -180,8 +180,8 @@ namespace App {
                 DrawCircle(worldPoint.x, worldPoint.y, GRID_CELL_SIZE_PX / 4, color);
             }
 
-            if(!shape.isComplete())
-                shape.popVertex();
+            if(!shape.IsComplete())
+                shape.PopVertex();
         }
 
         EndMode2D();
@@ -294,7 +294,7 @@ namespace App {
         UnloadRenderTexture(m_renderTexture);
     }
 
-    void EditWindow::update() {
+    void EditWindow::Update() {
         if(m_state == State::ADDING) {
             Shape& shape = App::Get().GetShape(App::Get().GetShapeCount() - 1);
             static Vector2 lastMousePos;
@@ -307,11 +307,11 @@ namespace App {
                 if(dx == 0 && dy == 0) {
                     Vector2 mouseGridPoint = getMouseGridPosition();
                     Vector3 mouseGridVertex = getPointToVertex(mouseGridPoint);
-                    if(shape.canAddVertex(mouseGridVertex)) {
-                        shape.addVertex(mouseGridVertex);
-                        if(shape.getVertexCount() > 1)
-                        if(Vector3Equals(shape.getVertex(0), mouseGridVertex)) {
-                            shape.markAsComplete();
+                    if(shape.CanAddVertex(mouseGridVertex)) {
+                        shape.AddVertex(mouseGridVertex);
+                        if(shape.GetVertexCount() > 1)
+                        if(Vector3Equals(shape.GetVertex(0), mouseGridVertex)) {
+                            shape.MarkAsComplete();
                             m_state = State::NONE;
                         }
                     }

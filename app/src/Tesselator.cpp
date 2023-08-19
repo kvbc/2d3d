@@ -21,12 +21,12 @@ namespace App {
     // Public
     // 
 
-    Tesselator& Tesselator::getInstance() {
+    Tesselator& Tesselator::Get() {
         static Tesselator instance;
         return instance;
     }
 
-    void Tesselator::tesselate(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints) {
+    void Tesselator::Tesselate(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints) {
         outPoints.clear();
 
         // magic to determine the winding order

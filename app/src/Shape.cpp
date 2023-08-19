@@ -5,7 +5,7 @@ namespace App {
 
     Shape::Shape() {}
 
-    bool Shape::canAddVertex(Vector3 vertex) const {
+    bool Shape::CanAddVertex(Vector3 vertex) const {
         // skip 1st point check!
         for(size_t i = 1; i < m_vertices.size(); i++)
             if(Vector3Equals(m_vertices[i], vertex))
@@ -13,31 +13,31 @@ namespace App {
         return true;
     }
 
-    bool Shape::isComplete() const {
+    bool Shape::IsComplete() const {
         return m_isComplete;
     }
 
-    void Shape::markAsComplete() {
+    void Shape::MarkAsComplete() {
         m_isComplete = true;
     }
 
-    void Shape::addVertex(Vector3 vertex) {
+    void Shape::AddVertex(Vector3 vertex) {
         m_vertices.push_back(vertex);
     }
 
-    size_t Shape::getVertexCount() {
+    size_t Shape::GetVertexCount() {
         return m_vertices.size();
     }
 
-    const Vector3& Shape::getVertex(size_t idx) {
+    const Vector3& Shape::GetVertex(size_t idx) {
         return m_vertices[idx];
     }
 
-    void Shape::popVertex() {
+    void Shape::PopVertex() {
         m_vertices.pop_back();
     }
 
-    const std::vector<Vector3>& Shape::getVertices() const {
+    const std::vector<Vector3>& Shape::GetVertices() const {
         return m_vertices;
     }
 }

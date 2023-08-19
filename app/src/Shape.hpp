@@ -16,14 +16,14 @@ namespace App {
         Color color = BLUE;
 
         Shape();
-        bool isComplete() const;
-        void markAsComplete();
-        void addVertex(Vector3 vertex);
-        size_t getVertexCount();
-        const Vector3& getVertex(size_t idx);
-        const std::vector<Vector3>& getVertices() const;
-        void popVertex();
-        bool canAddVertex(Vector3 vertex) const;
+        bool IsComplete() const;
+        void MarkAsComplete();
+        void AddVertex(Vector3 vertex);
+        size_t GetVertexCount();
+        const Vector3& GetVertex(size_t idx);
+        const std::vector<Vector3>& GetVertices() const;
+        void PopVertex();
+        bool CanAddVertex(Vector3 vertex) const;
     };
 
 }

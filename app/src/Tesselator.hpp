@@ -10,8 +10,8 @@ namespace App {
 
     class Tesselator {
     public:
-        static Tesselator& getInstance();
-        void tesselate(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints);
+        static Tesselator& Get();
+        void Tesselate(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints);
     private:
         TESStesselator * m_tess;
 
