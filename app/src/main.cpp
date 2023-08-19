@@ -5,6 +5,7 @@
 #include "rlImGui.h"
 #include <iostream>
 
+#include "App.hpp"
 #include "EditWindow.hpp"
 
 int main() {
@@ -15,8 +16,6 @@ int main() {
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::GetIO().ConfigWindowsMoveFromTitleBarOnly = true;
 
-    App::EditWindow editWindow;
-
     bool quit = false;
     while(!WindowShouldClose() && !quit) {
         BeginDrawing();
@@ -24,7 +23,6 @@ int main() {
 
         ClearBackground(DARKGRAY);
 
-        /*
         // create an ImGui window that covers the entire viewport, so that we can have a menu bar at the top of the application
         {
             ImGui::SetNextWindowPos(ImVec2(0, 0));                                               // always at the window origin
@@ -57,11 +55,10 @@ int main() {
                 ImGui::End();
             }
         }
-        */
 
         ImGui::ShowDemoWindow(NULL);
 
-        editWindow.update();
+        App::App::getInstance().update();
 
         rlImGuiEnd();
         EndDrawing();

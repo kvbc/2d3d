@@ -9,15 +9,6 @@
 #include "tesselator.h"
 
 namespace App {
-    EditWindow::Shape::Shape() {}
-    bool EditWindow::Shape::canAddPoint(Vector2 gridPoint) {
-        // skip 1st point check!
-        for(size_t i = 1; i < points.size(); i++)
-            if(Vector2Equals(points[i], gridPoint))
-                return false;
-        return true;
-    }
-
     // 
     // Private
     // 
@@ -96,19 +87,26 @@ namespace App {
         for(Shape& shape : m_shapes) {
             Vector2 mouseGridPos = getMouseGridPosition();
             bool canAddPoint = shape.canAddPoint(mouseGridPos);
-            if(!shape.isComplete)
+            if(!shape.isComplete())
                 shape.points.push_back(mouseGridPos);
             size_t endIndex = shape.points.size() - 1;
 
             // Draw fill
-            if(shape.isComplete) {
-                std::vector<Vector2> worldPoints;
-                for(const Vector2& gridPoint : shape.points) {
+            if(shape.isComplete()) {
+                const std::vector<Vector2>& tessGridPoints = shape.getTesselatedPoints();
+                std::vector<Vector2> tessWorldPoints;
+                for(const Vector2& gridPoint : tessGridPoints) {
                     Vector2 worldPoint = getGridToWorldPosition(gridPoint);
-                    worldPoints.push_back(worldPoint);
+                    tessWorldPoints.push_back(worldPoint);
                 }
-                // DrawTriangleFan(worldPoints.data(), worldPoints.size(), BLUE);
-                
+                for(size_t i = 0; i < tessWorldPoints.size(); i += 3) {
+                    DrawTriangle(
+                        tessWorldPoints[i],
+                        tessWorldPoints[i+1],
+                        tessWorldPoints[i+2],
+                        shape.color
+                    );
+                }
             }
 
             // Draw lines (connections)
@@ -118,7 +116,7 @@ namespace App {
                 Vector2 prevWorldPoint = getGridToWorldPosition(prevGridPoint);
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = {50, 50, 50, 255};
-                if(!shape.isComplete)
+                if(!shape.isComplete())
                 if(i == endIndex) {
                     if(!canAddPoint)
                         color = RED;
@@ -132,7 +130,7 @@ namespace App {
                 const Vector2& gridPoint = shape.points[i];
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = GOLD;
-                if(!shape.isComplete)
+                if(!shape.isComplete())
                 if(i == endIndex) {
                     if(!canAddPoint)
                         color = RED;
@@ -141,18 +139,9 @@ namespace App {
                 DrawCircle(worldPoint.x, worldPoint.y, GRID_CELL_SIZE_PX / 4, color);
             }
 
-            if(!shape.isComplete)
+            if(!shape.isComplete())
                 shape.points.pop_back();
         }
-
-        // DrawCircle(0, 0, 20, RED);
-
-        // rlBegin(RL_TRIANGLES);
-        //     rlColor4ub(255, 0, 0, 255);
-        //     rlVertex2f(0, 0);
-        //     rlVertex2f(50,100);
-        //     rlVertex2f(100, 0);
-        // rlEnd();
 
         EndMode2D();
         EndTextureMode();
@@ -213,7 +202,7 @@ namespace App {
     }
 
     void EditWindow::draw() {
-        if(ImGui::Begin("Edit", nullptr, ImGuiWindowFlags_MenuBar)) {
+        if(ImGui::Begin(m_name.c_str(), nullptr, ImGuiWindowFlags_MenuBar)) {
             m_windowPos = ImGui::GetWindowPos();
             m_windowPos.x += ImGui::GetWindowContentRegionMin().x;
             m_windowPos.y += ImGui::GetWindowContentRegionMin().y;
@@ -247,12 +236,13 @@ namespace App {
     // Public
     // 
 
-    EditWindow::EditWindow():
+    EditWindow::EditWindow(std::string_view name):
         m_camera({}),
         m_renderTexture(LoadRenderTexture(GetScreenWidth(), GetScreenHeight())),
         m_state(State::NONE),
         m_windowPos(0, 0),
-        m_windowSize(0, 0)
+        m_windowSize(0, 0),
+        m_name(name)
     {
         resetCamera();
     }
@@ -274,12 +264,12 @@ namespace App {
                 if(dx == 0 && dy == 0) {
                     Vector2 mouseGridPos = getMouseGridPosition();
                     if(shape.canAddPoint(mouseGridPos)) {
+                        shape.points.push_back(getMouseGridPosition());
                         if(shape.points.size() > 1)
                         if(Vector2Equals(shape.points.front(), mouseGridPos)) {
-                            shape.isComplete = true;
+                            shape.markAsComplete();
                             m_state = State::NONE;
                         }
-                        shape.points.push_back(getMouseGridPosition());
                     }
                 }
             } else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {

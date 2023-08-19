@@ -2,12 +2,21 @@
 
 #include "imgui.h"
 #include "raylib.h"
+#include "Tesselator.hpp"
 #include <vector>
 #include <optional>
+#include <string_view>
+#include <string>
+#include "Shape.hpp"
 
 namespace App {
 
     class EditWindow {
+    public: 
+        EditWindow(std::string_view name);
+        ~EditWindow();
+        void update();
+
     private:
         const float ZOOM_SENSITIVITY = 0.125;
         const float MIN_ZOOM = 0.5;
@@ -22,20 +31,13 @@ namespace App {
             ADDING
         };
 
-        struct Shape {
-            bool isComplete = false;
-            std::vector<Vector2> points;
-
-            Shape();
-            bool canAddPoint(Vector2 point);
-        };
-
         std::vector<Shape> m_shapes;
         State m_state;
         RenderTexture2D m_renderTexture;
         Camera2D m_camera;
         ImVec2 m_windowPos;
         ImVec2 m_windowSize;
+        std::string m_name;
 
         Vector2 getScreenToGridPosition(Vector2 screenPosition);
         Vector2 getWorldToGridPosition(Vector2 worldPosition);
@@ -45,10 +47,6 @@ namespace App {
         void redrawTexture();
         void drawScene();
         void draw();
-    public: 
-        EditWindow();
-        ~EditWindow();
-        void update();
     };
 
 }
