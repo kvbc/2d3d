@@ -7,13 +7,18 @@
 #include <optional>
 #include <string_view>
 #include <string>
-#include "Shape.hpp"
 
 namespace App {
 
     class EditWindow {
     public: 
-        EditWindow(std::string_view name);
+        enum class View {
+            Right, Left, // +X, -X
+            Up, Down, // +Y, -Y
+            Front, Back // +Z, -Z
+        };
+
+        EditWindow(std::string_view name, View view);
         ~EditWindow();
         void update();
 
@@ -31,7 +36,7 @@ namespace App {
             ADDING
         };
 
-        std::vector<Shape> m_shapes;
+        View m_view;
         State m_state;
         RenderTexture2D m_renderTexture;
         Camera2D m_camera;
@@ -39,11 +44,13 @@ namespace App {
         ImVec2 m_windowSize;
         std::string m_name;
 
-        Vector2 getScreenToGridPosition(Vector2 screenPosition);
-        Vector2 getWorldToGridPosition(Vector2 worldPosition);
-        Vector2 getGridToWorldPosition(Vector2 gridPosition);
-        Vector2 getMouseGridPosition();
-        void resetCamera();
+        Vector3 getPointToVertex(Vector2 v) const;
+        Vector2 getVertexToPoint(Vector3 v) const;
+        Vector2 getScreenToGridPosition(Vector2 screenPosition) const;
+        Vector2 getWorldToGridPosition(Vector2 worldPosition) const;
+        Vector2 getGridToWorldPosition(Vector2 gridPosition) const;
+        Vector2 getMouseGridPosition() const;
+        void resetCamera(bool redraw);
         void redrawTexture();
         void drawScene();
         void draw();

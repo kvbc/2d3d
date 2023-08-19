@@ -7,23 +7,24 @@
 #include "rlgl.h"
 #include <algorithm>
 #include "tesselator.h"
+#include "App.hpp"
 
 namespace App {
     // 
     // Private
     // 
 
-    Vector2 EditWindow::getWorldToGridPosition(Vector2 worldPosition) {
+    Vector2 EditWindow::getWorldToGridPosition(Vector2 worldPosition) const {
         worldPosition.x = round(worldPosition.x / GRID_CELL_SIZE_PX);
         worldPosition.y = round(worldPosition.y / GRID_CELL_SIZE_PX);
         return worldPosition;
     }
 
-    Vector2 EditWindow::getGridToWorldPosition(Vector2 gridPosition) {
+    Vector2 EditWindow::getGridToWorldPosition(Vector2 gridPosition) const {
         return Vector2Scale(gridPosition, GRID_CELL_SIZE_PX);
     }
 
-    Vector2 EditWindow::getScreenToGridPosition(Vector2 screenPos) {
+    Vector2 EditWindow::getScreenToGridPosition(Vector2 screenPos) const {
         screenPos.x -= m_windowPos.x;
         screenPos.y -= m_windowPos.y;
         screenPos.x *= GetScreenWidth() / m_windowSize.x;
@@ -33,8 +34,34 @@ namespace App {
         return getWorldToGridPosition(worldPos);
     }
 
-    Vector2 EditWindow::getMouseGridPosition() {
+    Vector2 EditWindow::getMouseGridPosition() const {
         return getScreenToGridPosition(GetMousePosition());
+    }
+
+    Vector3 EditWindow::getPointToVertex(Vector2 v) const {
+        switch(m_view) {
+            case View::Right:
+            case View::Left : return {0, v.x, v.y};
+            case View::Up   :
+            case View::Down : return {v.x, 0, v.y};
+            case View::Front:
+            case View::Back : return {v.x, v.y, 0};
+        }
+        assert(false);
+        return {};
+    }
+
+    Vector2 EditWindow::getVertexToPoint(Vector3 v) const {
+        switch(m_view) {
+            case View::Right:
+            case View::Left : return {v.y, v.z};
+            case View::Up   :
+            case View::Down : return {v.x, v.z};
+            case View::Front:
+            case View::Back : return {v.x, v.y};
+        }
+        assert(false);
+        return {};
     }
 
     void EditWindow::redrawTexture() {
@@ -84,21 +111,32 @@ namespace App {
         }
 
         // Draw shapes
-        for(Shape& shape : m_shapes) {
-            Vector2 mouseGridPos = getMouseGridPosition();
-            bool canAddPoint = shape.canAddPoint(mouseGridPos);
+        for(size_t shapeIdx = 0; shapeIdx < App::Get().GetShapeCount(); shapeIdx++) {
+            Shape& shape = App::Get().GetShape(shapeIdx);
+            Vector2 mouseGridPoint = getMouseGridPosition();
+            Vector3 mouseGridVertex = getPointToVertex(mouseGridPoint);
+            bool canAddVertex = shape.canAddVertex(mouseGridVertex);
             if(!shape.isComplete())
-                shape.points.push_back(mouseGridPos);
-            size_t endIndex = shape.points.size() - 1;
+                shape.addVertex(mouseGridVertex);
+            size_t endIndex = shape.getVertexCount() - 1;
 
             // Draw fill
             if(shape.isComplete()) {
-                const std::vector<Vector2>& tessGridPoints = shape.getTesselatedPoints();
+                std::vector<Vector2> gridPoints;
+                for(Vector3 gridVertex : shape.getVertices()) {
+                    Vector2 gridPoint = getVertexToPoint(gridVertex);
+                    gridPoints.push_back(gridPoint);
+                }
+                gridPoints.pop_back();
+                std::vector<Vector2> tessGridPoints;
+                Tesselator::getInstance().tesselate(gridPoints, tessGridPoints);
+
                 std::vector<Vector2> tessWorldPoints;
                 for(const Vector2& gridPoint : tessGridPoints) {
                     Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                     tessWorldPoints.push_back(worldPoint);
                 }
+                
                 for(size_t i = 0; i < tessWorldPoints.size(); i += 3) {
                     DrawTriangle(
                         tessWorldPoints[i],
@@ -110,15 +148,17 @@ namespace App {
             }
 
             // Draw lines (connections)
-            for(size_t i = 1; i < shape.points.size(); i++) {
-                const Vector2& gridPoint = shape.points[i];
-                const Vector2& prevGridPoint = shape.points[i - 1];
+            for(size_t i = 1; i < shape.getVertexCount(); i++) {
+                const Vector3& gridVertex = shape.getVertex(i);
+                const Vector3& prevGridVertex = shape.getVertex(i - 1);
+                Vector2 gridPoint = getVertexToPoint(gridVertex);
+                Vector2 prevGridPoint = getVertexToPoint(prevGridVertex);
                 Vector2 prevWorldPoint = getGridToWorldPosition(prevGridPoint);
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = {50, 50, 50, 255};
                 if(!shape.isComplete())
                 if(i == endIndex) {
-                    if(!canAddPoint)
+                    if(!canAddVertex)
                         color = RED;
                     color.a /= 2;
                 }
@@ -126,13 +166,14 @@ namespace App {
             }
 
             // Draw circles
-            for(size_t i = 0; i < shape.points.size(); i++) {
-                const Vector2& gridPoint = shape.points[i];
+            for(size_t i = 0; i < shape.getVertexCount(); i++) {
+                Vector3 gridVertex = shape.getVertex(i);
+                Vector2 gridPoint = getVertexToPoint(gridVertex);
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = GOLD;
                 if(!shape.isComplete())
                 if(i == endIndex) {
-                    if(!canAddPoint)
+                    if(!canAddVertex)
                         color = RED;
                     color.a /= 2;
                 }
@@ -140,7 +181,7 @@ namespace App {
             }
 
             if(!shape.isComplete())
-                shape.points.pop_back();
+                shape.popVertex();
         }
 
         EndMode2D();
@@ -193,12 +234,13 @@ namespace App {
         rlImGuiImageRect(&m_renderTexture.texture, size.x, size.y, sourceRect);
     }
 
-    void EditWindow::resetCamera() {
+    void EditWindow::resetCamera(bool redraw = true) {
         m_camera.offset = Vector2{0,0};
         m_camera.rotation = 0;
         m_camera.target = Vector2{0,0};
         m_camera.zoom = 1;
-        redrawTexture();
+        if(redraw)
+            redrawTexture();
     }
 
     void EditWindow::draw() {
@@ -224,7 +266,7 @@ namespace App {
                 if(m_state == State::NONE)
                 if(ImGui::MenuItem("Add")) {
                     m_state = State::ADDING;
-                    m_shapes.push_back(Shape());
+                    App::Get().PushShape(Shape());
                 }
                 ImGui::EndPopup();
             }
@@ -236,15 +278,16 @@ namespace App {
     // Public
     // 
 
-    EditWindow::EditWindow(std::string_view name):
+    EditWindow::EditWindow(std::string_view name, View view):
         m_camera({}),
         m_renderTexture(LoadRenderTexture(GetScreenWidth(), GetScreenHeight())),
         m_state(State::NONE),
         m_windowPos(0, 0),
         m_windowSize(0, 0),
-        m_name(name)
+        m_name(name),
+        m_view(view)
     {
-        resetCamera();
+        resetCamera(false);
     }
 
     EditWindow::~EditWindow() {
@@ -253,7 +296,7 @@ namespace App {
 
     void EditWindow::update() {
         if(m_state == State::ADDING) {
-            Shape& shape = m_shapes.back();
+            Shape& shape = App::Get().GetShape(App::Get().GetShapeCount() - 1);
             static Vector2 lastMousePos;
             if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                 lastMousePos = GetMousePosition();
@@ -262,18 +305,19 @@ namespace App {
                 int dx = lastMousePos.x - mousePos.x;
                 int dy = lastMousePos.y - mousePos.y;
                 if(dx == 0 && dy == 0) {
-                    Vector2 mouseGridPos = getMouseGridPosition();
-                    if(shape.canAddPoint(mouseGridPos)) {
-                        shape.points.push_back(getMouseGridPosition());
-                        if(shape.points.size() > 1)
-                        if(Vector2Equals(shape.points.front(), mouseGridPos)) {
+                    Vector2 mouseGridPoint = getMouseGridPosition();
+                    Vector3 mouseGridVertex = getPointToVertex(mouseGridPoint);
+                    if(shape.canAddVertex(mouseGridVertex)) {
+                        shape.addVertex(mouseGridVertex);
+                        if(shape.getVertexCount() > 1)
+                        if(Vector3Equals(shape.getVertex(0), mouseGridVertex)) {
                             shape.markAsComplete();
                             m_state = State::NONE;
                         }
                     }
                 }
             } else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-                m_shapes.pop_back();
+                App::Get().PopShape();
                 m_state = State::NONE;
                 // TODO: Make context menu not show
             }

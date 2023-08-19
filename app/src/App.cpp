@@ -1,4 +1,5 @@
 #include "App.hpp"
+#include <iostream>
 
 namespace App {
 
@@ -6,15 +7,31 @@ namespace App {
     // Public
     // 
 
-    App& App::getInstance() {
+    App& App::Get() {
         static App app;
         return app;
     }
 
-    void App::update() {
+    void App::Update() {
         m_XEditWindow.update();
         m_YEditWindow.update();
         m_ZEditWindow.update();
+    }
+
+    Shape& App::GetShape(size_t idx) {
+        return m_shapes[idx];
+    }
+
+    size_t App::GetShapeCount() const {
+        return m_shapes.size();
+    }
+
+    void App::PushShape(const Shape& shape) {
+        m_shapes.push_back(shape);
+    }
+
+    void App::PopShape() {
+        m_shapes.pop_back();
     }
 
     // 
@@ -22,9 +39,8 @@ namespace App {
     // 
 
     App::App():
-        m_XEditWindow("X View"),
-        m_YEditWindow("Y View"),
-        m_ZEditWindow("Z View")
+        m_XEditWindow("X View", EditWindow::View::Right),
+        m_YEditWindow("Y View", EditWindow::View::Up),
+        m_ZEditWindow("Z View", EditWindow::View::Front)
     {}
-
 }

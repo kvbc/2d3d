@@ -29,6 +29,20 @@ namespace App {
     void Tesselator::tesselate(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints) {
         outPoints.clear();
 
+        // magic to determine the winding order
+        // https://stackoverflow.com/a/1165943/21398468
+        float curve = 0;
+        for(size_t i = 0; i < points.size(); i++) {
+            size_t nextIdx = (i + 1) % points.size();
+            float diffX = points[nextIdx].x - points[i].x;
+            float sumY = points[nextIdx].y + points[i].y;
+            curve += diffX * sumY;
+        }
+        if(curve >= 0)
+            tessSetOption(m_tess, TESS_REVERSE_CONTOURS, 0); // clockwise
+        else
+            tessSetOption(m_tess, TESS_REVERSE_CONTOURS, 1); // counter-clockwise
+
         std::vector<float> floatPoints;
         for(const Vector2& point : points) {
             floatPoints.push_back(point.x);

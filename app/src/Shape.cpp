@@ -5,28 +5,39 @@ namespace App {
 
     Shape::Shape() {}
 
-    bool Shape::canAddPoint(Vector2 gridPoint) {
+    bool Shape::canAddVertex(Vector3 vertex) const {
         // skip 1st point check!
-        for(size_t i = 1; i < points.size(); i++)
-            if(Vector2Equals(points[i], gridPoint))
+        for(size_t i = 1; i < m_vertices.size(); i++)
+            if(Vector3Equals(m_vertices[i], vertex))
                 return false;
         return true;
     }
 
-    bool Shape::isComplete() {
+    bool Shape::isComplete() const {
         return m_isComplete;
     }
 
     void Shape::markAsComplete() {
         m_isComplete = true;
-
-        std::vector<Vector2> gridPoints = points;
-        gridPoints.pop_back();
-        Tesselator::getInstance().tesselate(gridPoints, m_tesselatedPoints);
     }
 
-    const std::vector<Vector2>& Shape::getTesselatedPoints() {
-        return m_tesselatedPoints;
+    void Shape::addVertex(Vector3 vertex) {
+        m_vertices.push_back(vertex);
     }
 
+    size_t Shape::getVertexCount() {
+        return m_vertices.size();
+    }
+
+    const Vector3& Shape::getVertex(size_t idx) {
+        return m_vertices[idx];
+    }
+
+    void Shape::popVertex() {
+        m_vertices.pop_back();
+    }
+
+    const std::vector<Vector3>& Shape::getVertices() const {
+        return m_vertices;
+    }
 }

@@ -58,7 +58,7 @@ int main() {
 
         ImGui::ShowDemoWindow(NULL);
 
-        App::App::getInstance().update();
+        ::App::App::Get().Update();
 
         rlImGuiEnd();
         EndDrawing();

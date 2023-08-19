@@ -10,17 +10,20 @@ namespace App {
     class Shape {
     private:
         bool m_isComplete = false;
-        std::vector<Vector2> m_tesselatedPoints;
+        std::vector<Vector3> m_vertices;
 
     public:
-        std::vector<Vector2> points;
         Color color = BLUE;
 
         Shape();
-        bool isComplete();
+        bool isComplete() const;
         void markAsComplete();
-        bool canAddPoint(Vector2 point);
-        const std::vector<Vector2>& getTesselatedPoints();
+        void addVertex(Vector3 vertex);
+        size_t getVertexCount();
+        const Vector3& getVertex(size_t idx);
+        const std::vector<Vector3>& getVertices() const;
+        void popVertex();
+        bool canAddVertex(Vector3 vertex) const;
     };
 
 }
