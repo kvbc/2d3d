@@ -39,8 +39,8 @@ namespace App {
     // 
 
     App::App():
-        m_XEditWindow("X View", EditWindow::View::Right),
-        m_YEditWindow("Y View", EditWindow::View::Up),
-        m_ZEditWindow("Z View", EditWindow::View::Front)
+        m_XEditWindow(EditWindow::View::Right),
+        m_YEditWindow(EditWindow::View::Top),
+        m_ZEditWindow(EditWindow::View::Front)
     {}
 }

@@ -40,12 +40,12 @@ namespace App {
 
     Vector3 EditWindow::getPointToVertex(Vector2 v) const {
         switch(m_view) {
-            case View::Right:
-            case View::Left : return {0, v.x, v.y};
-            case View::Up   :
-            case View::Down : return {v.x, 0, v.y};
-            case View::Front:
-            case View::Back : return {v.x, v.y, 0};
+            case View::Right :
+            case View::Left  : return {0, v.x, v.y};
+            case View::Top   :
+            case View::Bottom: return {v.x, 0, v.y};
+            case View::Front :
+            case View::Back  : return {v.x, v.y, 0};
         }
         assert(false);
         return {};
@@ -53,12 +53,12 @@ namespace App {
 
     Vector2 EditWindow::getVertexToPoint(Vector3 v) const {
         switch(m_view) {
-            case View::Right:
-            case View::Left : return {v.y, v.z};
-            case View::Up   :
-            case View::Down : return {v.x, v.z};
-            case View::Front:
-            case View::Back : return {v.x, v.y};
+            case View::Right :
+            case View::Left  : return {v.y, v.z};
+            case View::Top   :
+            case View::Bottom: return {v.x, v.z};
+            case View::Front :
+            case View::Back  : return {v.x, v.y};
         }
         assert(false);
         return {};
@@ -244,7 +244,16 @@ namespace App {
     }
 
     void EditWindow::draw() {
-        if(ImGui::Begin(m_name.c_str(), nullptr, ImGuiWindowFlags_MenuBar)) {
+        const char * name = NULL;
+        switch(m_view) {
+            case View::Left  : name = "Left View"; break;
+            case View::Right : name = "Right View"; break;
+            case View::Top   : name = "Top View"; break;
+            case View::Bottom: name = "Bottom View"; break;
+            case View::Front : name = "Front View"; break;
+            case View::Back  : name = "Back View"; break;
+        }
+        if(ImGui::Begin(name, nullptr, ImGuiWindowFlags_MenuBar)) {
             m_windowPos = ImGui::GetWindowPos();
             m_windowPos.x += ImGui::GetWindowContentRegionMin().x;
             m_windowPos.y += ImGui::GetWindowContentRegionMin().y;
@@ -278,13 +287,12 @@ namespace App {
     // Public
     // 
 
-    EditWindow::EditWindow(std::string_view name, View view):
+    EditWindow::EditWindow(View view):
         m_camera({}),
         m_renderTexture(LoadRenderTexture(GetScreenWidth(), GetScreenHeight())),
         m_state(State::NONE),
         m_windowPos(0, 0),
         m_windowSize(0, 0),
-        m_name(name),
         m_view(view)
     {
         resetCamera(false);

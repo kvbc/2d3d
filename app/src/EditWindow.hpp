@@ -14,11 +14,11 @@ namespace App {
     public: 
         enum class View {
             Right, Left, // +X, -X
-            Up, Down, // +Y, -Y
+            Top, Bottom, // +Y, -Y
             Front, Back // +Z, -Z
         };
 
-        EditWindow(std::string_view name, View view);
+        EditWindow(View view);
         ~EditWindow();
         void Update();
 
@@ -42,7 +42,6 @@ namespace App {
         Camera2D m_camera;
         ImVec2 m_windowPos;
         ImVec2 m_windowSize;
-        std::string m_name;
 
         Vector3 getPointToVertex(Vector2 v) const;
         Vector2 getVertexToPoint(Vector3 v) const;
