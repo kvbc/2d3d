@@ -8,22 +8,27 @@
 namespace App {
 
     class Shape {
+    public:
+        // a face is a collection of vertex indices
+        using Face = std::vector<size_t>;
+
     private:
-        bool m_isComplete = false;
         std::vector<Vector3> m_vertices;
+        std::vector<Face> m_faces;
 
     public:
         Color color = BLUE;
 
         Shape();
-        bool IsComplete() const;
-        void MarkAsComplete();
+
+        void AddFace(const Face& face);
+
         void AddVertex(Vector3 vertex);
-        size_t GetVertexCount();
-        const Vector3& GetVertex(size_t idx);
+        size_t GetVertexCount() const;
+        const Vector3& GetVertex(size_t idx) const;
         const std::vector<Vector3>& GetVertices() const;
-        void PopVertex();
-        bool CanAddVertex(Vector3 vertex) const;
+        // void RemoveVertex(Vector3 vertex);
+        // void PopVertex();
     };
 
 }

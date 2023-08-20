@@ -7,6 +7,7 @@
 #include <optional>
 #include <string_view>
 #include <string>
+#include "Shape.hpp"
 
 namespace App {
 
@@ -43,6 +44,14 @@ namespace App {
         ImVec2 m_windowPos;
         ImVec2 m_windowSize;
 
+        bool canAddShapePoint(const Shape& shape, Vector2 point) const;
+        void addShapePoint(Shape& shape, Vector2 point);
+        // void removeShapePoint(Shape& shape, Vector2 point);
+        void popShapePoint(Shape& shape);
+        bool isShapeComplete(const Shape& shape) const;
+        std::vector<Vector2> getShapePoints(const Shape& shape) const;
+        // 
+        Vector3 getViewDirection() const;
         Vector3 getPointToVertex(Vector2 v) const;
         Vector2 getVertexToPoint(Vector3 v) const;
         Vector2 getScreenToGridPosition(Vector2 screenPosition) const;

@@ -14,6 +14,59 @@ namespace App {
     // Private
     // 
 
+    bool EditWindow::canAddShapePoint(const Shape& shape, Vector2 point) const {
+        std::vector<Vector2> points = getShapePoints(shape);
+        for(size_t i = 1; i < points.size(); i++) // skip 1st check
+            if(Vector2Equals(points[i], point))
+                return false;
+        return true;
+    }
+
+    void EditWindow::addShapePoint(Shape& shape, Vector2 point) {
+        Vector3 vertex1 = getPointToVertex(point);
+        Vector3 vertex2 = Vector3Add(vertex1, getViewDirection());
+        shape.AddVertex(vertex1);
+        shape.AddVertex(vertex2);
+    }
+
+    bool EditWindow::isShapeComplete(const Shape& shape) const {
+        const std::vector<Vector2>& points = getShapePoints(shape);
+        return
+            (points.size() > 2) &&
+            Vector2Equals(points.front(), points.back());
+    }
+
+    std::vector<Vector2> EditWindow::getShapePoints(const Shape& shape) const {
+        std::vector<Vector2> points;
+
+        for(Vector3 vertex : shape.GetVertices()) {
+            Vector2 point = getVertexToPoint(vertex);
+            if(std::any_of(points.begin(), points.end(), [=](Vector2 alrPoint) {
+                return Vector2Equals(alrPoint, point);
+            }))
+                continue;
+            points.push_back(point);
+        }
+
+        if(!points.empty()) {
+            Vector3 lastVertex = shape.GetVertices().back();
+            Vector2 lastVertexPoint = getVertexToPoint(lastVertex);
+            if(Vector2Equals(lastVertexPoint, points[0]))
+                points.push_back(lastVertexPoint);
+        }
+
+        return points;
+    }
+
+    // void EditWindow::removeShapePoint(Shape& shape, Vector2 point) {
+    //     for(Vector3 vertex : shape.GetVertices()) {
+    //         Vector2 vertexPoint = getVertexToPoint(vertex);
+    //         if(Vector2Equals(vertexPoint, point))
+    //             shape.RemoveVertex(vertex);
+    //     }
+    // }
+
+
     Vector2 EditWindow::getWorldToGridPosition(Vector2 worldPosition) const {
         worldPosition.x = round(worldPosition.x / GRID_CELL_SIZE_PX);
         worldPosition.y = round(worldPosition.y / GRID_CELL_SIZE_PX);
@@ -59,6 +112,19 @@ namespace App {
             case View::Bottom: return {v.x, v.z};
             case View::Front :
             case View::Back  : return {v.x, v.y};
+        }
+        assert(false);
+        return {};
+    }
+
+    Vector3 EditWindow::getViewDirection() const {
+        switch(m_view) {
+            case View::Right : return {+1,0,0};
+            case View::Left  : return {-1,0,0};
+            case View::Top   : return {0,+1,0};
+            case View::Bottom: return {0,-1,0};
+            case View::Front : return {0,0,+1};
+            case View::Back  : return {0,0,-1};
         }
         assert(false);
         return {};
@@ -114,19 +180,15 @@ namespace App {
         for(size_t shapeIdx = 0; shapeIdx < App::Get().GetShapeCount(); shapeIdx++) {
             Shape& shape = App::Get().GetShape(shapeIdx);
             Vector2 mouseGridPoint = getMouseGridPosition();
-            Vector3 mouseGridVertex = getPointToVertex(mouseGridPoint);
-            bool canAddVertex = shape.CanAddVertex(mouseGridVertex);
-            if(!shape.IsComplete())
-                shape.AddVertex(mouseGridVertex);
-            size_t endIndex = shape.GetVertexCount() - 1;
+            bool canAddPoint = canAddShapePoint(shape, mouseGridPoint);
+            std::vector<Vector2> points = getShapePoints(shape);
+            size_t mousePointIndex = points.size();
+            if(!isShapeComplete(shape))
+                points.push_back(mouseGridPoint);
 
             // Draw fill
-            if(shape.IsComplete()) {
-                std::vector<Vector2> gridPoints;
-                for(Vector3 gridVertex : shape.GetVertices()) {
-                    Vector2 gridPoint = getVertexToPoint(gridVertex);
-                    gridPoints.push_back(gridPoint);
-                }
+            if(isShapeComplete(shape)) {
+                std::vector<Vector2> gridPoints = points; // copy
                 gridPoints.pop_back();
                 std::vector<Vector2> tessGridPoints;
                 Tesselator::Get().Tesselate(gridPoints, tessGridPoints);
@@ -148,17 +210,14 @@ namespace App {
             }
 
             // Draw lines (connections)
-            for(size_t i = 1; i < shape.GetVertexCount(); i++) {
-                const Vector3& gridVertex = shape.GetVertex(i);
-                const Vector3& prevGridVertex = shape.GetVertex(i - 1);
-                Vector2 gridPoint = getVertexToPoint(gridVertex);
-                Vector2 prevGridPoint = getVertexToPoint(prevGridVertex);
+            for(size_t i = 1; i < points.size(); i++) {
+                Vector2 gridPoint = points[i];
+                Vector2 prevGridPoint = points[i-1];
                 Vector2 prevWorldPoint = getGridToWorldPosition(prevGridPoint);
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = {50, 50, 50, 255};
-                if(!shape.IsComplete())
-                if(i == endIndex) {
-                    if(!canAddVertex)
+                if(i == mousePointIndex) {
+                    if(!canAddPoint)
                         color = RED;
                     color.a /= 2;
                 }
@@ -166,22 +225,17 @@ namespace App {
             }
 
             // Draw circles
-            for(size_t i = 0; i < shape.GetVertexCount(); i++) {
-                Vector3 gridVertex = shape.GetVertex(i);
-                Vector2 gridPoint = getVertexToPoint(gridVertex);
+            for(size_t i = 0; i < points.size(); i++) {
+                Vector2 gridPoint = points[i];
                 Vector2 worldPoint = getGridToWorldPosition(gridPoint);
                 Color color = GOLD;
-                if(!shape.IsComplete())
-                if(i == endIndex) {
-                    if(!canAddVertex)
+                if(i == mousePointIndex) {
+                    if(!canAddPoint)
                         color = RED;
                     color.a /= 2;
                 }
                 DrawCircle(worldPoint.x, worldPoint.y, GRID_CELL_SIZE_PX / 4, color);
             }
-
-            if(!shape.IsComplete())
-                shape.PopVertex();
         }
 
         EndMode2D();
@@ -314,14 +368,10 @@ namespace App {
                 int dy = lastMousePos.y - mousePos.y;
                 if(dx == 0 && dy == 0) {
                     Vector2 mouseGridPoint = getMouseGridPosition();
-                    Vector3 mouseGridVertex = getPointToVertex(mouseGridPoint);
-                    if(shape.CanAddVertex(mouseGridVertex)) {
-                        shape.AddVertex(mouseGridVertex);
-                        if(shape.GetVertexCount() > 1)
-                        if(Vector3Equals(shape.GetVertex(0), mouseGridVertex)) {
-                            shape.MarkAsComplete();
+                    if(canAddShapePoint(shape, mouseGridPoint)) {
+                        addShapePoint(shape, mouseGridPoint);
+                        if(isShapeComplete(shape))
                             m_state = State::NONE;
-                        }
                     }
                 }
             } else if(IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
