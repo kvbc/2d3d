@@ -26,7 +26,7 @@ namespace App {
         return instance;
     }
 
-    void Tesselator::Tesselate(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints) {
+    void Tesselator::Tesselate2D(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints) {
         outPoints.clear();
 
         // magic to determine the winding order
@@ -64,6 +64,35 @@ namespace App {
                 outPoints.push_back({x, y});
             }
         }
+    }
+
+    std::vector<Vector3> Tesselator::Tesselate3D(const std::vector<Vector3>& vertices) {
+        std::vector<float> floatVertices;
+        for(const Vector3& vertex : vertices) {
+            floatVertices.push_back(vertex.x);
+            floatVertices.push_back(vertex.y);
+            floatVertices.push_back(vertex.z);
+        }
+
+        tessAddContour(m_tess, 3, floatVertices.data(), sizeof(float)*3, vertices.size());
+        tessTesselate(m_tess, TESS_WINDING_POSITIVE, TESS_POLYGONS, 3, 3, NULL);
+
+        std::vector<Vector3> outVertices;
+        const float * tessVertices = tessGetVertices(m_tess);
+        const int elementCount = tessGetElementCount(m_tess);
+        const int * elements = tessGetElements(m_tess);
+        // https://github.com/memononen/libtess2/blob/fc52516467dfa124bdd967c15c7cf9faf02a34ca/Example/example.c#L356
+        for(size_t i = 0; i < elementCount; i++) {
+            const int * p = &elements[i * 3];
+            for(size_t j = 0; j < 3 && p[j] != TESS_UNDEF; j++) {
+                float x = tessVertices[p[j]*2];
+                float y = tessVertices[p[j]*2+1];
+                float z = tessVertices[p[j]*2+2];
+                outVertices.push_back({x, y, z});
+            }
+        }
+
+        return outVertices;
     }
 
 }

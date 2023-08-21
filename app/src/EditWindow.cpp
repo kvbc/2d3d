@@ -27,6 +27,25 @@ namespace App {
         Vector3 vertex2 = Vector3Add(vertex1, getViewDirection());
         shape.AddVertex(vertex1);
         shape.AddVertex(vertex2);
+
+        // Add faces
+        if(isShapeComplete(shape)) {
+            const std::vector<Vector2>& points = getShapePoints(shape);
+            Shape::Face face1, face2;
+            for(size_t i = 0; i < points.size(); i++) {
+                face1.push_back(i * 2);
+            } 
+            shape.AddFace(face1);
+        }
+    }
+
+    std::vector<Vector2> EditWindow::getShapeFacePoints(const Shape& shape, const Shape::Face& face) const {
+        std::vector<Vector2> points;
+        for(Vector3 vertex : shape.GetFaceVertices(face)) {
+            Vector2 point = getVertexToPoint(vertex);
+            points.push_back(point);
+        }
+        return points;
     }
 
     bool EditWindow::isShapeComplete(const Shape& shape) const {
@@ -38,8 +57,9 @@ namespace App {
 
     std::vector<Vector2> EditWindow::getShapePoints(const Shape& shape) const {
         std::vector<Vector2> points;
+        const std::vector<Vector3>& vertices = shape.GetVertices();
 
-        for(Vector3 vertex : shape.GetVertices()) {
+        for(Vector3 vertex : vertices) {
             Vector2 point = getVertexToPoint(vertex);
             if(std::any_of(points.begin(), points.end(), [=](Vector2 alrPoint) {
                 return Vector2Equals(alrPoint, point);
@@ -49,7 +69,7 @@ namespace App {
         }
 
         if(!points.empty()) {
-            Vector3 lastVertex = shape.GetVertices().back();
+            Vector3 lastVertex = vertices.back();
             Vector2 lastVertexPoint = getVertexToPoint(lastVertex);
             if(Vector2Equals(lastVertexPoint, points[0]))
                 points.push_back(lastVertexPoint);
@@ -130,13 +150,7 @@ namespace App {
         return {};
     }
 
-    void EditWindow::redrawTexture() {
-        if(IsWindowResized()) {
-            UnloadRenderTexture(m_renderTexture);
-            m_renderTexture = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
-        }
-
-        BeginTextureMode(m_renderTexture);
+    void EditWindow::drawTexture() {
         BeginMode2D(m_camera);
 
         ClearBackground(BLACK);
@@ -188,24 +202,36 @@ namespace App {
 
             // Draw fill
             if(isShapeComplete(shape)) {
-                std::vector<Vector2> gridPoints = points; // copy
-                gridPoints.pop_back();
-                std::vector<Vector2> tessGridPoints;
-                Tesselator::Get().Tesselate(gridPoints, tessGridPoints);
+                for(const Shape::Face& face : shape.GetFaces()) {
+                    std::vector<Vector2> gridPoints = getShapeFacePoints(shape, face);
+                    gridPoints.pop_back();
+                    std::vector<Vector2> tessGridPoints;
+                    Tesselator::Get().Tesselate2D(gridPoints, tessGridPoints);
 
-                std::vector<Vector2> tessWorldPoints;
-                for(const Vector2& gridPoint : tessGridPoints) {
-                    Vector2 worldPoint = getGridToWorldPosition(gridPoint);
-                    tessWorldPoints.push_back(worldPoint);
-                }
-                
-                for(size_t i = 0; i < tessWorldPoints.size(); i += 3) {
-                    DrawTriangle(
-                        tessWorldPoints[i],
-                        tessWorldPoints[i+1],
-                        tessWorldPoints[i+2],
-                        shape.color
-                    );
+                    std::vector<Vector2> tessWorldPoints;
+                    for(const Vector2& gridPoint : tessGridPoints) {
+                        Vector2 worldPoint = getGridToWorldPosition(gridPoint);
+                        tessWorldPoints.push_back(worldPoint);
+                    }
+
+                    Color color;
+                    switch(m_view) {
+                        case View::Left  : color = MAROON; break;
+                        case View::Right : color = RED; break;
+                        case View::Top   : color = GREEN; break;
+                        case View::Bottom: color = DARKGREEN; break;
+                        case View::Front : color = BLUE; break;
+                        case View::Back  : color = DARKBLUE; break;
+                    }
+                    
+                    for(size_t i = 0; i < tessWorldPoints.size(); i += 3) {
+                        DrawTriangle(
+                            tessWorldPoints[i],
+                            tessWorldPoints[i+1],
+                            tessWorldPoints[i+2],
+                            color
+                        );
+                    }
                 }
             }
 
@@ -239,11 +265,9 @@ namespace App {
         }
 
         EndMode2D();
-        EndTextureMode();
     }
 
     void EditWindow::drawScene() {
-        static bool redraw = true;
         static bool dragging = false;
         Vector2 mousePos = GetMousePosition();
 
@@ -261,7 +285,7 @@ namespace App {
                 m_camera.target = mouseWorldPos;
                 float zoomDelta = wheelMovement * ZOOM_SENSITIVITY;
                 m_camera.zoom = std::clamp<float>(m_camera.zoom + zoomDelta, MIN_ZOOM, MAX_ZOOM);
-                redraw = true;
+                // redraw = true;
             }
 
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -271,7 +295,7 @@ namespace App {
                 m_camera.target = Vector2Subtract(m_camera.target, mouseDelta);
 
                 dragging = true;
-                redraw = true;
+                // redraw = true;
             } else {
                 dragging = false;
             }
@@ -282,10 +306,7 @@ namespace App {
         //     redrawTexture();
         // }
         redrawTexture();
-
-        ImVec2 size = ImGui::GetContentRegionAvail();
-        Rectangle sourceRect = {0, 0, m_renderTexture.texture.width, m_renderTexture.texture.height};
-        rlImGuiImageRect(&m_renderTexture.texture, size.x, size.y, sourceRect);
+        renderTexture();
     }
 
     void EditWindow::resetCamera(bool redraw = true) {
@@ -297,15 +318,15 @@ namespace App {
             redrawTexture();
     }
 
-    void EditWindow::draw() {
+    void EditWindow::drawWindow() {
         const char * name = NULL;
         switch(m_view) {
-            case View::Left  : name = "Left View"; break;
-            case View::Right : name = "Right View"; break;
-            case View::Top   : name = "Top View"; break;
-            case View::Bottom: name = "Bottom View"; break;
-            case View::Front : name = "Front View"; break;
-            case View::Back  : name = "Back View"; break;
+            case View::Left  : name = "Left View###X"; break;
+            case View::Right : name = "Right View###X"; break;
+            case View::Top   : name = "Top View###Y"; break;
+            case View::Bottom: name = "Bottom View###Y"; break;
+            case View::Front : name = "Front View###Z"; break;
+            case View::Back  : name = "Back View###Z"; break;
         }
         if(ImGui::Begin(name, nullptr, ImGuiWindowFlags_MenuBar)) {
             m_windowPos = ImGui::GetWindowPos();
@@ -317,9 +338,17 @@ namespace App {
 
             if(ImGui::BeginMenuBar()) {
                 if(ImGui::BeginMenu("Camera")) {
-                    if(ImGui::MenuItem("Reset")) {
+                    if(ImGui::MenuItem("Reset"))
                         resetCamera();
-                    }
+                    if(ImGui::MenuItem("Flip"))
+                        switch(m_view) {
+                            case View::Left  : m_view = View::Right; break;
+                            case View::Right : m_view = View::Left; break;
+                            case View::Top   : m_view = View::Bottom; break;
+                            case View::Bottom: m_view = View::Top; break;
+                            case View::Front : m_view = View::Back; break;
+                            case View::Back  : m_view = View::Front; break;
+                        }
                     ImGui::EndMenu();
                 }
                 ImGui::EndMenuBar();
@@ -342,18 +371,12 @@ namespace App {
     // 
 
     EditWindow::EditWindow(View view):
-        m_camera({}),
-        m_renderTexture(LoadRenderTexture(GetScreenWidth(), GetScreenHeight())),
         m_state(State::NONE),
         m_windowPos(0, 0),
         m_windowSize(0, 0),
         m_view(view)
     {
         resetCamera(false);
-    }
-
-    EditWindow::~EditWindow() {
-        UnloadRenderTexture(m_renderTexture);
     }
 
     void EditWindow::Update() {
@@ -381,6 +404,6 @@ namespace App {
             }
         }
 
-        draw();
+        drawWindow();
     }
 }

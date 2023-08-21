@@ -9,8 +9,21 @@ namespace App {
 
     // Face
 
-    void Shape::AddFace(const Face& face) {
+    void Shape::AddFace(const Shape::Face& face) {
         m_faces.push_back(face);
+    }
+
+    const std::vector<Shape::Face>& Shape::GetFaces() const {
+        return m_faces;
+    }
+
+    std::vector<Vector3> Shape::GetFaceVertices(const Face& face) const {
+        std::vector<Vector3> vertices;
+        for(size_t vertexIndex : face) {
+            Vector3 vertex = GetVertex(vertexIndex);
+            vertices.push_back(vertex);
+        }
+        return vertices;
     }
 
     // Vertices

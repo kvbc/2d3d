@@ -16,6 +16,7 @@ namespace App {
         m_XEditWindow.Update();
         m_YEditWindow.Update();
         m_ZEditWindow.Update();
+        m_viewWindow.Update();
     }
 
     Shape& App::GetShape(size_t idx) {
@@ -24,6 +25,10 @@ namespace App {
 
     size_t App::GetShapeCount() const {
         return m_shapes.size();
+    }
+
+    const std::vector<Shape>& App::GetShapes() const {
+        return m_shapes;
     }
 
     void App::PushShape(const Shape& shape) {

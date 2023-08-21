@@ -11,7 +11,8 @@ namespace App {
     class Tesselator {
     public:
         static Tesselator& Get();
-        void Tesselate(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints);
+        void Tesselate2D(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints);
+        std::vector<Vector3> Tesselate3D(const std::vector<Vector3>& vertices);
     private:
         TESStesselator * m_tess;
 

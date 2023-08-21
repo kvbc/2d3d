@@ -17,11 +17,11 @@ namespace App {
         std::vector<Face> m_faces;
 
     public:
-        Color color = BLUE;
-
         Shape();
 
         void AddFace(const Face& face);
+        std::vector<Vector3> GetFaceVertices(const Face& face) const;
+        const std::vector<Face>& GetFaces() const;
 
         void AddVertex(Vector3 vertex);
         size_t GetVertexCount() const;

@@ -8,10 +8,11 @@
 #include <string_view>
 #include <string>
 #include "Shape.hpp"
+#include "Window.hpp"
 
 namespace App {
 
-    class EditWindow {
+    class EditWindow : Window {
     public: 
         enum class View {
             Right, Left, // +X, -X
@@ -20,7 +21,6 @@ namespace App {
         };
 
         EditWindow(View view);
-        ~EditWindow();
         void Update();
 
     private:
@@ -39,7 +39,6 @@ namespace App {
 
         View m_view;
         State m_state;
-        RenderTexture2D m_renderTexture;
         Camera2D m_camera;
         ImVec2 m_windowPos;
         ImVec2 m_windowSize;
@@ -50,6 +49,7 @@ namespace App {
         void popShapePoint(Shape& shape);
         bool isShapeComplete(const Shape& shape) const;
         std::vector<Vector2> getShapePoints(const Shape& shape) const;
+        std::vector<Vector2> getShapeFacePoints(const Shape& shape, const Shape::Face& face) const;
         // 
         Vector3 getViewDirection() const;
         Vector3 getPointToVertex(Vector2 v) const;
@@ -59,9 +59,9 @@ namespace App {
         Vector2 getGridToWorldPosition(Vector2 gridPosition) const;
         Vector2 getMouseGridPosition() const;
         void resetCamera(bool redraw);
-        void redrawTexture();
+        void drawTexture();
         void drawScene();
-        void draw();
+        void drawWindow();
     };
 
 }
