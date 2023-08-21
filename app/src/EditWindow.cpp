@@ -23,7 +23,8 @@ namespace App {
     }
 
     void EditWindow::addShapePoint(Shape& shape, Vector2 point) {
-        Vector3 vertex1 = getPointToVertex(point);
+        Vector3 vertex = getPointToVertex(point);
+        Vector3 vertex1 = Vector3Subtract(vertex, getViewDirection());
         Vector3 vertex2 = Vector3Add(vertex1, getViewDirection());
         shape.AddVertex(vertex1);
         shape.AddVertex(vertex2);
@@ -31,11 +32,23 @@ namespace App {
         // Add faces
         if(isShapeComplete(shape)) {
             const std::vector<Vector2>& points = getShapePoints(shape);
-            Shape::Face face1, face2;
+
+            Shape::Face frontFace, backFace;
             for(size_t i = 0; i < points.size(); i++) {
-                face1.push_back(i * 2);
+                frontFace.push_back(i * 2);
+                backFace.push_back(i * 2 + 1);
             } 
-            shape.AddFace(face1);
+            shape.AddFace(frontFace, getViewDirection());
+            shape.AddFace(backFace, getViewDirection());
+
+            for(size_t i = 1; i < points.size(); i++) {
+                Shape::Face edgeFace;
+                edgeFace.push_back((i - 1) * 2);
+                edgeFace.push_back(i * 2);
+                edgeFace.push_back(i * 2 + 1);
+                edgeFace.push_back((i - 1) * 2 + 1);
+                shape.AddFace(edgeFace, getViewDirection());
+            }
         }
     }
 

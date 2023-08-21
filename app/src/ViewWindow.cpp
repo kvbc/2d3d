@@ -41,8 +41,8 @@ namespace App {
         if(IsKeyDown(KEY_A)) CameraMoveRight  (&m_camera, -CAMERA_MOVE_SPEED, false);
         if(IsKeyDown(KEY_S)) CameraMoveForward(&m_camera, -CAMERA_MOVE_SPEED, false);
         if(IsKeyDown(KEY_D)) CameraMoveRight  (&m_camera,  CAMERA_MOVE_SPEED, false);
-        if(IsKeyDown(KEY_SPACE       )) CameraMoveUp(&m_camera, -CAMERA_MOVE_SPEED);
-        if(IsKeyDown(KEY_LEFT_CONTROL)) CameraMoveUp(&m_camera,  CAMERA_MOVE_SPEED);
+        if(IsKeyDown(KEY_SPACE     )) CameraMoveUp(&m_camera, -CAMERA_MOVE_SPEED);
+        if(IsKeyDown(KEY_LEFT_SHIFT)) CameraMoveUp(&m_camera,  CAMERA_MOVE_SPEED);
 
         // rotate (arrows)
         if(IsKeyDown(KEY_DOWN )) CameraPitch(&m_camera,  CAMERA_ROTATION_SPEED, false, false, false);
@@ -97,20 +97,30 @@ namespace App {
         drawGrid(100, 1);
         // DrawCube(Vector3{0,0,0}, 3, 3, 3, GOLD);
 
+        // for(const Shape& shape : App::Get().GetShapes()) {
+        //     for(const Shape::Face& face : shape.GetFaces()) {
+        //         const std::vector<Vector3>& vertices = shape.GetFaceVertices(face);
+        //         std::vector<Vector3> tessVertices = Tesselator::Get().Tesselate3D(vertices);
+        //         for(size_t i = 0; i < tessVertices.size(); i += 3) {
+        //             DrawTriangle3D(
+        //                 tessVertices[i],
+        //                 tessVertices[i + 1],
+        //                 tessVertices[i + 2],
+        //                 BLUE
+        //             );
+        //         }
+        //     }
+        // }
+
         for(const Shape& shape : App::Get().GetShapes()) {
-            for(const Shape::Face& face : shape.GetFaces()) {
-                const std::vector<Vector3>& vertices = shape.GetFaceVertices(face);
-                std::vector<Vector3> tessVertices = Tesselator::Get().Tesselate3D(vertices);
-                for(size_t i = 0; i < tessVertices.size(); i += 3) {
-                    DrawTriangle3D(
-                        tessVertices[i],
-                        tessVertices[i + 1],
-                        tessVertices[i + 2],
-                        BLUE
-                    );
-                }
-            }
-        }
+            DrawModel(
+                shape.GetModel(),
+                Vector3Zero(),
+                1,
+                WHITE
+            );
+        }        
+
 
         EndMode3D();
     }

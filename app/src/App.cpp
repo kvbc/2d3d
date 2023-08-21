@@ -19,6 +19,49 @@ namespace App {
         m_viewWindow.Update();
     }
 
+    Color App::GetRandomColor() {
+        std::vector<Color> colors = {
+            LIGHTGRAY,
+            GRAY,
+            DARKGRAY,
+            YELLOW,
+            GOLD,
+            ORANGE,
+            PINK,
+            RED,
+            MAROON,
+            GREEN,
+            LIME,
+            DARKGREEN,
+            SKYBLUE,
+            BLUE,
+            DARKBLUE,
+            PURPLE,
+            VIOLET,
+            DARKPURPLE,
+            BEIGE,
+            BROWN,
+            DARKBROWN,
+            MAGENTA
+        };
+        return colors[GetRandomValue(0, colors.size() - 1)];
+    }
+
+    App::WindingOrder App::DetermineWindingOrder2D(const std::vector<Vector2>& points) {
+        // magic
+        // https://stackoverflow.com/a/1165943/21398468
+        float curve = 0;
+        for(size_t i = 0; i < points.size(); i++) {
+            size_t nextIdx = (i + 1) % points.size();
+            float diffX = points[nextIdx].x - points[i].x;
+            float sumY = points[nextIdx].y + points[i].y;
+            curve += diffX * sumY;
+        }
+        return (curve >= 0) ? WindingOrder::CLOCKWISE : WindingOrder::COUNTER_CLOCKWISE;
+    }
+
+    // Shape
+
     Shape& App::GetShape(size_t idx) {
         return m_shapes[idx];
     }

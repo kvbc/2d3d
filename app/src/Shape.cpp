@@ -1,16 +1,73 @@
 #include "Shape.hpp"
 #include "Tesselator.hpp"
-
+#include "App.hpp"
+#include <iostream>
 #include <algorithm>
 
 namespace App {
 
-    Shape::Shape() {}
+    // 
+    // PUblic
+    // 
+
+    Shape::Shape() {
+        m_model = { 0 };
+        m_model.transform = MatrixIdentity();
+        m_model.materialCount = 1;
+        m_model.materials = new Material[1];
+        m_model.materials[0] = LoadMaterialDefault();
+        // addMesh(GenMeshCube(3, 3, 3));
+    }
+
+    Shape::~Shape() {
+        // UnloadModel(m_model);
+    }
 
     // Face
 
-    void Shape::AddFace(const Shape::Face& face) {
+    void Shape::AddFace(const Shape::Face& face, Vector3 normal) {
         m_faces.push_back(face);
+
+        std::vector<Vector3> faceVertices = GetFaceVertices(face);
+        std::reverse(faceVertices.begin(), faceVertices.end());
+        const std::vector<Vector3>& tessFaceVertices = Tesselator::Get().Tesselate3D(faceVertices);
+
+        Mesh mesh = { 0 };
+        mesh.vertexCount = tessFaceVertices.size();
+        mesh.triangleCount = mesh.vertexCount / 3;
+        
+        mesh.vertices  = (float*)MemAlloc(mesh.vertexCount * 3 * sizeof(float));
+        mesh.texcoords = (float*)MemAlloc(mesh.vertexCount * 2 * sizeof(float));
+        mesh.normals   = (float*)MemAlloc(mesh.vertexCount * 3 * sizeof(float));
+        mesh.colors = (unsigned char*)MemAlloc(mesh.vertexCount * 4 * sizeof(unsigned char));
+
+        for(size_t i = 0; i < tessFaceVertices.size(); i++) {
+            Vector3 vertex = tessFaceVertices[i];
+            
+            mesh.vertices[i * 3 + 0] = vertex.x;
+            mesh.vertices[i * 3 + 1] = vertex.y;
+            mesh.vertices[i * 3 + 2] = vertex.z;
+
+            mesh.texcoords[i * 2 + 0] = 0;
+            mesh.texcoords[i * 2 + 1] = 0;
+
+            mesh.normals[i * 3 + 0] = normal.x;
+            mesh.normals[i * 3 + 1] = normal.y;
+            mesh.normals[i * 3 + 2] = normal.z;
+
+            // mesh.colors[i * 4 + 0] = GetRandomValue(127, 255);
+            // mesh.colors[i * 4 + 1] = GetRandomValue(127, 255);
+            // mesh.colors[i * 4 + 2] = GetRandomValue(127, 255);
+            // mesh.colors[i * 4 + 3] = 255;
+            Color color = App::GetRandomColor();
+            mesh.colors[i * 4 + 0] = color.r;
+            mesh.colors[i * 4 + 1] = color.g;
+            mesh.colors[i * 4 + 2] = color.b;
+            mesh.colors[i * 4 + 3] = 255;
+        }
+
+        UploadMesh(&mesh, false);
+        addMesh(mesh);
     }
 
     const std::vector<Shape::Face>& Shape::GetFaces() const {
@@ -52,5 +109,27 @@ namespace App {
 
     const std::vector<Vector3>& Shape::GetVertices() const {
         return m_vertices;
+    }
+
+    const Model& Shape::GetModel() const {
+        return m_model;
+    }
+
+    // 
+    // Private
+    // 
+
+    void Shape::addMesh(Mesh mesh) {
+        static std::vector<Mesh> meshes;
+        static std::vector<int> meshMaterials;
+
+        meshes.push_back(mesh);
+        meshMaterials.push_back(0); // first material
+
+        m_model.meshCount = meshes.size();
+        m_model.meshes = meshes.data();
+        m_model.meshMaterial = meshMaterials.data();
+
+        // UploadMesh(&mesh, false);
     }
 }

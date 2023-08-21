@@ -5,3 +5,5 @@ rlImGui/
 imgui.ini
 Makefile
 libtess2/
+.vscode/
+.vs/

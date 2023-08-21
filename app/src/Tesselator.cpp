@@ -1,6 +1,7 @@
 #include "Tesselator.hpp"
 #include <iostream> 
 #include <assert.h>
+#include "App.hpp"
 
 namespace App {
 
@@ -31,17 +32,8 @@ namespace App {
 
         // magic to determine the winding order
         // https://stackoverflow.com/a/1165943/21398468
-        float curve = 0;
-        for(size_t i = 0; i < points.size(); i++) {
-            size_t nextIdx = (i + 1) % points.size();
-            float diffX = points[nextIdx].x - points[i].x;
-            float sumY = points[nextIdx].y + points[i].y;
-            curve += diffX * sumY;
-        }
-        if(curve >= 0)
-            tessSetOption(m_tess, TESS_REVERSE_CONTOURS, 0); // clockwise
-        else
-            tessSetOption(m_tess, TESS_REVERSE_CONTOURS, 1); // counter-clockwise
+        // App::WindingOrder windingOrder = App::DetermineWindingOrder2D(points);
+        // tessSetOption(m_tess, TESS_REVERSE_CONTOURS, windingOrder == App::WindingOrder::CLOCKWISE ? 0 : 1); // reverse when counter-clockwise
 
         std::vector<float> floatPoints;
         for(const Vector2& point : points) {
@@ -85,9 +77,9 @@ namespace App {
         for(size_t i = 0; i < elementCount; i++) {
             const int * p = &elements[i * 3];
             for(size_t j = 0; j < 3 && p[j] != TESS_UNDEF; j++) {
-                float x = tessVertices[p[j]*2];
-                float y = tessVertices[p[j]*2+1];
-                float z = tessVertices[p[j]*2+2];
+                float x = tessVertices[p[j]*3];
+                float y = tessVertices[p[j]*3+1];
+                float z = tessVertices[p[j]*3+2];
                 outVertices.push_back({x, y, z});
             }
         }
