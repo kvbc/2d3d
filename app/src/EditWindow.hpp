@@ -1,14 +1,16 @@
 #pragma once
 
-#include "imgui.h"
-#include "raylib.h"
 #include "Tesselator.hpp"
+#include "Shape.hpp"
+#include "Window.hpp"
+
+#include "raylib.h"
+#include "imgui.h"
+
 #include <vector>
 #include <optional>
 #include <string_view>
 #include <string>
-#include "Shape.hpp"
-#include "Window.hpp"
 
 namespace App {
 
@@ -17,7 +19,7 @@ namespace App {
         enum class View {
             Right, Left, // +X, -X
             Top, Bottom, // +Y, -Y
-            Front, Back // +Z, -Z
+            Front, Back  // +Z, -Z
         };
 
         EditWindow(View view);
@@ -37,20 +39,15 @@ namespace App {
             ADDING
         };
 
-        View m_view;
-        State m_state;
-        Camera2D m_camera;
-        ImVec2 m_windowPos;
-        ImVec2 m_windowSize;
-
+        // Shape
         bool canAddShapePoint(const Shape& shape, Vector2 point) const;
         void addShapePoint(Shape& shape, Vector2 point);
-        // void removeShapePoint(Shape& shape, Vector2 point);
-        void popShapePoint(Shape& shape);
         bool isShapeComplete(const Shape& shape) const;
         std::vector<Vector2> getShapePoints(const Shape& shape) const;
         std::vector<Vector2> getShapeFacePoints(const Shape& shape, const Shape::Face& face) const;
-        // 
+        // void removeShapePoint(Shape& shape, Vector2 point);
+        
+        // Coordinates
         Vector3 getViewDirection() const;
         Vector3 getPointToVertex(Vector2 v) const;
         Vector2 getVertexToPoint(Vector3 v) const;
@@ -58,10 +55,19 @@ namespace App {
         Vector2 getWorldToGridPosition(Vector2 worldPosition) const;
         Vector2 getGridToWorldPosition(Vector2 gridPosition) const;
         Vector2 getMouseGridPosition() const;
+        
         void resetCamera(bool redraw);
+
+        // Draw
         void drawTexture();
         void drawScene();
         void drawWindow();
+
+        View m_view;
+        State m_state;
+        Camera2D m_camera;
+        ImVec2 m_windowPos;
+        ImVec2 m_windowSize;
     };
 
 }

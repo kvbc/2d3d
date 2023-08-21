@@ -1,7 +1,8 @@
 #include "Tesselator.hpp"
+#include "App.hpp"
+
 #include <iostream> 
 #include <assert.h>
-#include "App.hpp"
 
 namespace App {
 

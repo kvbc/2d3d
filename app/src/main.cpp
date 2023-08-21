@@ -1,12 +1,13 @@
 
-#include "raylib.h"
-#include "raymath.h"
-#include "imgui.h"
-#include "rlImGui.h"
-#include <iostream>
-
 #include "App.hpp"
 #include "EditWindow.hpp"
+
+#include "raylib.h"
+#include "raymath.h"
+#include "rlImGui.h"
+#include "imgui.h"
+
+#include <iostream>
 
 int main() {
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
