@@ -95,26 +95,28 @@ namespace App {
         ClearBackground(DARKGRAY);
 
         drawGrid(100, 1);
-        // DrawCube(Vector3{0,0,0}, 3, 3, 3, GOLD);
-
-        // for(const Shape& shape : App::Get().GetShapes()) {
-        //     for(const Shape::Face& face : shape.GetFaces()) {
-        //         const std::vector<Vector3>& vertices = shape.GetFaceVertices(face);
-        //         std::vector<Vector3> tessVertices = Tesselator::Get().Tesselate3D(vertices);
-        //         for(size_t i = 0; i < tessVertices.size(); i += 3) {
-        //             DrawTriangle3D(
-        //                 tessVertices[i],
-        //                 tessVertices[i + 1],
-        //                 tessVertices[i + 2],
-        //                 BLUE
-        //             );
-        //         }
-        //     }
-        // }
 
         for(const Shape& shape : App::Get().GetShapes()) {
+            const Model& model = shape.GetModel();
+
+            for(size_t meshIdx = 0; meshIdx < model.meshCount; meshIdx++) {
+                Mesh * mesh = &model.meshes[meshIdx];
+                for(size_t vxIdx = 0; vxIdx < mesh->vertexCount; vxIdx++) {
+                    float* fVertex = &mesh->vertices[vxIdx * 3];
+                    float* fNormal = &mesh->normals[vxIdx * 3];
+                    Vector3 vertex = { fVertex[0], fVertex[1], fVertex[2] };
+                    Vector3 normal = { fNormal[0], fNormal[1], fNormal[2] };
+
+                    Vector3 endPos = Vector3Add(vertex, normal);
+                    float radius = 0.1;
+                    int sides = 5;
+                    Color color = WHITE;
+                    DrawCylinderEx(vertex, endPos, radius, radius, sides, color);
+                }
+            }
+
             DrawModel(
-                shape.GetModel(),
+                model,
                 Vector3Zero(),
                 1,
                 WHITE

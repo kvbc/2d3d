@@ -38,7 +38,8 @@ namespace App {
                 frontFace.push_back(i * 2);
                 backFace.push_back(i * 2 + 1);
             } 
-            shape.AddFace(frontFace, getViewDirection());
+            std::reverse(frontFace.begin(), frontFace.end()); // counter-clockwise (visible)
+            shape.AddFace(frontFace, Vector3Negate(getViewDirection()));
             shape.AddFace(backFace, getViewDirection());
 
             for(size_t i = 1; i < points.size(); i++) {

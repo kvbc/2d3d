@@ -20,30 +20,7 @@ namespace App {
     }
 
     Color App::GetRandomColor() {
-        std::vector<Color> colors = {
-            LIGHTGRAY,
-            GRAY,
-            DARKGRAY,
-            YELLOW,
-            GOLD,
-            ORANGE,
-            PINK,
-            RED,
-            MAROON,
-            GREEN,
-            LIME,
-            DARKGREEN,
-            SKYBLUE,
-            BLUE,
-            DARKBLUE,
-            PURPLE,
-            VIOLET,
-            DARKPURPLE,
-            BEIGE,
-            BROWN,
-            DARKBROWN,
-            MAGENTA
-        };
+        std::vector<Color> colors = { LIGHTGRAY, GRAY, DARKGRAY, YELLOW, GOLD, ORANGE, PINK, RED, MAROON, GREEN, LIME, DARKGREEN, SKYBLUE, BLUE, DARKBLUE, PURPLE, VIOLET, DARKPURPLE, BEIGE, BROWN, DARKBROWN, MAGENTA };
         return colors[GetRandomValue(0, colors.size() - 1)];
     }
 
