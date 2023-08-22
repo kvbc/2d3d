@@ -80,7 +80,6 @@ namespace App {
         screenPos.y -= m_windowPos.y;
         screenPos.x *= GetScreenWidth() / m_windowSize.x;
         screenPos.y *= GetScreenHeight() / m_windowSize.y;
-        screenPos.y = GetScreenHeight() - screenPos.y;
         Vector2 worldPos = GetScreenToWorld2D(screenPos, m_camera);
         return getWorldToGridPosition(worldPos);
     }
@@ -234,7 +233,6 @@ namespace App {
             if(IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
                 Vector2 mouseDelta = GetMouseDelta();
                 mouseDelta = Vector2Scale(mouseDelta, 1.0 / m_camera.zoom);
-                mouseDelta.y *= -1;
                 m_camera.target = Vector2Subtract(m_camera.target, mouseDelta);
 
                 dragging = true;
@@ -353,6 +351,9 @@ namespace App {
                 drawEdge(m_addingShapePoints[i-1], m_addingShapePoints[i], color);
             if (!m_addingShapePoints.empty())
                 drawEdge(m_addingShapePoints.back(), mouseGridPoint, color);
+
+            for(Vector2 point : m_addingShapePoints)
+                drawPoint(point, color);
             drawPoint(mouseGridPoint, color);
         }
 
@@ -391,9 +392,8 @@ namespace App {
         assert(canAddAddingShapePoint(newPoint));
 
         bool isComplete = !m_addingShapePoints.empty() && Vector2Equals(m_addingShapePoints[0], newPoint);
-        if(!isComplete) {
-            m_addingShapePoints.push_back(newPoint);
-        } else { // complete
+        m_addingShapePoints.push_back(newPoint);
+        if(isComplete) {
             Shape shape;
 
             // Add vertices
@@ -413,7 +413,7 @@ namespace App {
                 (m_view == View::Top) ||
                 (m_view == View::Left) ||
                 (m_view == View::Back)
-                ) {
+            ) {
                 windingOrder = App::WindingOrder::CLOCKWISE;
             }
             App::WindingOrder placeWindingOrder = App::DetermineWindingOrder2D(m_addingShapePoints); // order the points have been placed in
