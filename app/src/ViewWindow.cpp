@@ -16,27 +16,27 @@ namespace App {
     // 
 
     ViewWindow::ViewWindow():
-        m_orientCubeTxt(LoadRenderTexture(ORIENT_CUBE_WINDOW_SIZE, ORIENT_CUBE_WINDOW_SIZE))
+        m_orientModelRTxt(LoadRenderTexture(ORIENT_MODEL_WINDOW_SIZE, ORIENT_MODEL_WINDOW_SIZE))
     {
         resetCamera();
 
-        m_orientCubeCamera.fovy = 90;
-        m_orientCubeCamera.position = Vector3{ 0, 0, ORIENT_CUBE_SIZE + ORIENT_CUBE_CAMERA_OFFSET };
-        m_orientCubeCamera.projection = CAMERA_PERSPECTIVE;
-        m_orientCubeCamera.target = Vector3{ 0,0,0 };
-        m_orientCubeCamera.up = Vector3{ 0,1,0 };
+        m_orientModelCamera.fovy = 90;
+        m_orientModelCamera.position = Vector3Zero();
+        m_orientModelCamera.projection = CAMERA_PERSPECTIVE;
+        m_orientModelCamera.target = Vector3{ 0,0,0 };
+        m_orientModelCamera.up = Vector3{ 0,1,0 };
 
-        generateOrientationCubeModel();
+        loadOrientationModel();
     }
 
     ViewWindow::~ViewWindow() {
-        UnloadRenderTexture(m_orientCubeTxt);
-        UnloadModel(m_orientCubeModel);
+        UnloadRenderTexture(m_orientModelRTxt);
+        UnloadModel(m_orientModel);
     }
 
     void ViewWindow::Update() {
         updateCamera();
-        updateOrientationCubeCamera();
+        updateOrientationModelCamera();
         drawWindow();
     }
 
@@ -103,7 +103,7 @@ namespace App {
     }
 
     void ViewWindow::drawScene() {
-        drawOrientationCubeTexture();
+        drawOrientationModelTexture();
 
         redrawTexture();
         renderTexture();
@@ -148,9 +148,9 @@ namespace App {
         // DrawTexture(m_orientCubeTxt.texture, 0, 0, WHITE);
         // we gotta flip the texture on the Y axis for some reason (?)
         DrawTexturePro(
-            m_orientCubeTxt.texture,
-            {0, 0, m_orientCubeTxt.texture.width, m_orientCubeTxt.texture.height * -1},
-            {0, 0, m_orientCubeTxt.texture.width, m_orientCubeTxt.texture.height},
+            m_orientModelRTxt.texture,
+            {0, 0, m_orientModelRTxt.texture.width, m_orientModelRTxt.texture.height * -1},
+            {0, 0, m_orientModelRTxt.texture.width, m_orientModelRTxt.texture.height},
             {0, 0},
             0,
             WHITE
@@ -181,161 +181,26 @@ namespace App {
         rlEnd();
     }
 
-    void ViewWindow::drawOrientationCubeTexture() {
-        BeginTextureMode(m_orientCubeTxt);
+    void ViewWindow::drawOrientationModelTexture() {
+        BeginTextureMode(m_orientModelRTxt);
         ClearBackground(BLANK);
         // DrawCircle(10, 10, 10, RED);
-        BeginMode3D(m_orientCubeCamera);
+        BeginMode3D(m_orientModelCamera);
         
-        //DrawCube(Vector3Zero(), ORIENT_CUBE_SIZE, ORIENT_CUBE_SIZE, ORIENT_CUBE_SIZE, ORIENT_CUBE_COLOR);
-        DrawModel(m_orientCubeModel, Vector3Zero(), 1, WHITE);
+        // DrawCube(Vector3Zero(), 3, 3, 3, GRAY);
+        DrawModel(m_orientModel, Vector3Zero(), 1, WHITE);
 
         EndMode3D();
         EndTextureMode();
     }
 
-    void ViewWindow::updateOrientationCubeCamera() {
+    void ViewWindow::updateOrientationModelCamera() {
         Vector3 lookVector = GetCameraForward(&m_camera);
-        Vector3 cubeSize = { ORIENT_CUBE_SIZE, ORIENT_CUBE_SIZE, ORIENT_CUBE_SIZE };
-        Vector3 halfCubeSize = Vector3Divide(cubeSize, { 2,2,2 });
-        Vector3 camOffset = Vector3AddValue(halfCubeSize, ORIENT_CUBE_CAMERA_OFFSET);
-        m_orientCubeCamera.position = Vector3Negate(Vector3Multiply(lookVector, camOffset));
+        Vector3 camOffset = { ORIENT_MODEL_CAMERA_OFFSET, ORIENT_MODEL_CAMERA_OFFSET, ORIENT_MODEL_CAMERA_OFFSET };
+        m_orientModelCamera.position = Vector3Negate(Vector3Multiply(lookVector, camOffset));
     }
 
-    void ViewWindow::generateOrientationCubeModel() {
-        float hw = ORIENT_CUBE_SIZE / 2; // half width  (X)
-        float hh = ORIENT_CUBE_SIZE / 2; // half height (Y)
-        float hd = ORIENT_CUBE_SIZE / 2; // half depth  (Z
-
-        Mesh frontMesh = generateOrientationCubeMesh({
-            -hw,  hh, hd,
-            -hw, -hh, hd,
-             hw, -hh, hd,
-             hw,  hh, hd
-        });
-        Mesh backMesh = generateOrientationCubeMesh({
-             hw,  hh, -hd,
-             hw, -hh, -hd,
-            -hw, -hh, -hd,
-            -hw,  hh, -hd
-        });
-        Mesh leftMesh = generateOrientationCubeMesh({
-            -hw,  hh, -hd,
-            -hw, -hh, -hd,
-            -hw, -hh,  hd,
-            -hw,  hh,  hd
-        });
-        Mesh rightMesh = generateOrientationCubeMesh({
-            hw,  hh,  hd,
-            hw, -hh,  hd,
-            hw, -hh, -hd,
-            hw,  hh, -hd
-        });
-        Mesh topMesh = generateOrientationCubeMesh({
-            -hw, hh, -hd,
-            -hw, hh,  hd,
-             hw, hh,  hd,
-             hw, hh, -hd
-        });
-        Mesh bottomMesh = generateOrientationCubeMesh({
-            -hw, -hh,  hd,
-            -hw, -hh, -hd,
-             hw, -hh, -hd,
-             hw, -hh,  hd
-        });
-
-        Model model = { 0 };
-        model.transform = MatrixIdentity();
-
-        model.meshCount = 6;
-        model.meshes = (Mesh*)MemAlloc(model.meshCount * sizeof(Mesh));
-        model.meshes[0] = frontMesh;
-        model.meshes[1] = backMesh;
-        model.meshes[2] = leftMesh;
-        model.meshes[3] = rightMesh;
-        model.meshes[4] = topMesh;
-        model.meshes[5] = bottomMesh;
-
-        Color frontColor = SKYBLUE;
-        Color backColor = DARKBLUE;
-        Color leftColor   = { 125, 0, 0, 255 };
-        Color rightColor  = { 255, 0, 0, 255 };
-        Color topColor    = { 0, 255, 0, 255 };
-        Color bottomColor = { 0, 125, 0, 255 };
-
-        Image frontImage = GenImageChecked(250, 250, 250/3.0, 250/3.0, BLACK, frontColor);
-        imageDrawText(frontImage, "F", 256, WHITE);
-
-        model.materialCount = 6;
-        model.materials = (Material*)MemAlloc(model.materialCount * sizeof(Material));
-        for(size_t i = 0; i < model.materialCount; i++)
-            model.materials[i] = LoadMaterialDefault();
-        model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(frontImage);
-        model.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, backColor));
-        model.materials[2].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, leftColor));
-        model.materials[3].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, rightColor));
-        model.materials[4].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, topColor));
-        model.materials[5].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, bottomColor));
-
-        model.meshMaterial = (int*)MemAlloc(model.meshCount * sizeof(int));
-        model.meshMaterial[0] = 0;
-        model.meshMaterial[1] = 1;
-        model.meshMaterial[2] = 2;
-        model.meshMaterial[3] = 3;
-        model.meshMaterial[4] = 4;
-        model.meshMaterial[5] = 5;
-
-        m_orientCubeModel = model;
-    }
-
-    Mesh ViewWindow::generateOrientationCubeMesh(const std::array<float,4*3>& vertices) {
-        Mesh mesh = { 0 };
-
-        mesh.triangleCount = 2;
-        mesh.vertexCount = vertices.size() / 3;
-
-        size_t verticesByteSize = vertices.size() * sizeof(float);
-        mesh.vertices = (float*)MemAlloc(verticesByteSize);
-        memcpy(mesh.vertices, vertices.data(), verticesByteSize);
-        
-        unsigned short indices[] = {
-            0, 1, 2,
-            2, 3, 0
-        };
-        mesh.indices = (unsigned short*)MemAlloc(sizeof(indices));
-        memcpy(mesh.indices, indices, sizeof(indices));
-
-        float texcoords[] = {
-            0,0,
-            0,1,
-            1,1,
-            1,0
-        };
-        mesh.texcoords = (float*)MemAlloc(sizeof(texcoords));
-        memcpy(mesh.texcoords, texcoords, sizeof(texcoords));
-
-        UploadMesh(&mesh, false);
-        return mesh;
-    }
-
-    void ViewWindow::imageDrawText(Image& image, const char* text, float fontSize, Color color) {
-        int defaultFontSize = 10;
-        if (fontSize < defaultFontSize)
-            fontSize = defaultFontSize;
-        int spacing = fontSize / defaultFontSize;
-        Font font = LoadFont("app/fonts/font.ttf");
-        Vector2 textSize = MeasureTextEx(font, text, fontSize, spacing);
-        ImageDrawTextEx(
-            &image,
-            font,
-            text,
-            {
-                image.width / 2 - textSize.x / 2,
-                image.height / 2 - textSize.y / 2,
-            },
-            fontSize,
-            spacing,
-            color
-        );
+    void ViewWindow::loadOrientationModel() {
+        m_orientModel = LoadModel("app/assets/car.glb");
     }
 }

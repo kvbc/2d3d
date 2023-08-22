@@ -26,10 +26,8 @@ namespace App {
         const float CAMERA_PAN_SPEED = 0.3;
         const float CAMERA_ZOOM_SENSITIVITY = 2;
 
-        const float ORIENT_CUBE_SIZE = 3;
-        const float ORIENT_CUBE_CAMERA_OFFSET = 3;
-        const int ORIENT_CUBE_WINDOW_SIZE = 200;
-        const Color ORIENT_CUBE_COLOR = GRAY;
+        const float ORIENT_MODEL_CAMERA_OFFSET = 3;
+        const int ORIENT_MODEL_WINDOW_SIZE = 200;
 
         void resetCamera();
         void updateCamera();
@@ -39,18 +37,14 @@ namespace App {
         void drawTexture();
         void drawGrid(int slices, float spacing);
 
-        void updateOrientationCubeCamera();
-        void drawOrientationCubeTexture();
-        void generateOrientationCubeModel();
-        Mesh generateOrientationCubeMesh(const std::array<float, 4*3>& vertices);
-
-        void imageDrawText(Image& image, const char* text, float fontSize, Color color);
-        void imageDrawOutlinedText(Image& image, const char* text, float fontSize);
+        void loadOrientationModel();
+        void updateOrientationModelCamera();
+        void drawOrientationModelTexture();
 
         Camera3D m_camera;
-        Model m_orientCubeModel;
-        RenderTexture m_orientCubeTxt;
-        Camera3D m_orientCubeCamera;
+        Model m_orientModel;
+        RenderTexture m_orientModelRTxt;
+        Camera3D m_orientModelCamera;
     };
 
 }
