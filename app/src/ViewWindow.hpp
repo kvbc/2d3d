@@ -44,6 +44,9 @@ namespace App {
         void generateOrientationCubeModel();
         Mesh generateOrientationCubeMesh(const std::array<float, 4*3>& vertices);
 
+        void imageDrawText(Image& image, const char* text, float fontSize, Color color);
+        void imageDrawOutlinedText(Image& image, const char* text, float fontSize);
+
         Camera3D m_camera;
         Model m_orientCubeModel;
         RenderTexture m_orientCubeTxt;

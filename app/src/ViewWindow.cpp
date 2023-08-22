@@ -145,7 +145,16 @@ namespace App {
 
         EndMode3D();
 
-        DrawTexture(m_orientCubeTxt.texture, 0, 0, WHITE);
+        // DrawTexture(m_orientCubeTxt.texture, 0, 0, WHITE);
+        // we gotta flip the texture on the Y axis for some reason (?)
+        DrawTexturePro(
+            m_orientCubeTxt.texture,
+            {0, 0, m_orientCubeTxt.texture.width, m_orientCubeTxt.texture.height * -1},
+            {0, 0, m_orientCubeTxt.texture.width, m_orientCubeTxt.texture.height},
+            {0, 0},
+            0,
+            WHITE
+        );
     }
 
     // modified version of raylib's DrawGrid()
@@ -174,8 +183,9 @@ namespace App {
 
     void ViewWindow::drawOrientationCubeTexture() {
         BeginTextureMode(m_orientCubeTxt);
-        BeginMode3D(m_orientCubeCamera);
         ClearBackground(BLANK);
+        // DrawCircle(10, 10, 10, RED);
+        BeginMode3D(m_orientCubeCamera);
         
         //DrawCube(Vector3Zero(), ORIENT_CUBE_SIZE, ORIENT_CUBE_SIZE, ORIENT_CUBE_SIZE, ORIENT_CUBE_COLOR);
         DrawModel(m_orientCubeModel, Vector3Zero(), 1, WHITE);
@@ -221,26 +231,59 @@ namespace App {
             hw, -hh, -hd,
             hw,  hh, -hd
         });
+        Mesh topMesh = generateOrientationCubeMesh({
+            -hw, hh, -hd,
+            -hw, hh,  hd,
+             hw, hh,  hd,
+             hw, hh, -hd
+        });
+        Mesh bottomMesh = generateOrientationCubeMesh({
+            -hw, -hh,  hd,
+            -hw, -hh, -hd,
+             hw, -hh, -hd,
+             hw, -hh,  hd
+        });
 
         Model model = { 0 };
         model.transform = MatrixIdentity();
 
-        model.meshCount = 4;
+        model.meshCount = 6;
         model.meshes = (Mesh*)MemAlloc(model.meshCount * sizeof(Mesh));
         model.meshes[0] = frontMesh;
         model.meshes[1] = backMesh;
         model.meshes[2] = leftMesh;
         model.meshes[3] = rightMesh;
+        model.meshes[4] = topMesh;
+        model.meshes[5] = bottomMesh;
 
-        model.materialCount = 1;
+        Color frontColor = SKYBLUE;
+        Color backColor = DARKBLUE;
+        Color leftColor   = { 125, 0, 0, 255 };
+        Color rightColor  = { 255, 0, 0, 255 };
+        Color topColor    = { 0, 255, 0, 255 };
+        Color bottomColor = { 0, 125, 0, 255 };
+
+        Image frontImage = GenImageChecked(250, 250, 250/3.0, 250/3.0, BLACK, frontColor);
+        imageDrawText(frontImage, "F", 256, WHITE);
+
+        model.materialCount = 6;
         model.materials = (Material*)MemAlloc(model.materialCount * sizeof(Material));
-        model.materials[0] = LoadMaterialDefault();
+        for(size_t i = 0; i < model.materialCount; i++)
+            model.materials[i] = LoadMaterialDefault();
+        model.materials[0].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(frontImage);
+        model.materials[1].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, backColor));
+        model.materials[2].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, leftColor));
+        model.materials[3].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, rightColor));
+        model.materials[4].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, topColor));
+        model.materials[5].maps[MATERIAL_MAP_DIFFUSE].texture = LoadTextureFromImage(GenImageChecked(9, 9, 3, 3, BLACK, bottomColor));
 
         model.meshMaterial = (int*)MemAlloc(model.meshCount * sizeof(int));
         model.meshMaterial[0] = 0;
-        model.meshMaterial[1] = 0;
-        model.meshMaterial[2] = 0;
-        model.meshMaterial[3] = 0;
+        model.meshMaterial[1] = 1;
+        model.meshMaterial[2] = 2;
+        model.meshMaterial[3] = 3;
+        model.meshMaterial[4] = 4;
+        model.meshMaterial[5] = 5;
 
         m_orientCubeModel = model;
     }
@@ -261,8 +304,38 @@ namespace App {
         };
         mesh.indices = (unsigned short*)MemAlloc(sizeof(indices));
         memcpy(mesh.indices, indices, sizeof(indices));
-        
+
+        float texcoords[] = {
+            0,0,
+            0,1,
+            1,1,
+            1,0
+        };
+        mesh.texcoords = (float*)MemAlloc(sizeof(texcoords));
+        memcpy(mesh.texcoords, texcoords, sizeof(texcoords));
+
         UploadMesh(&mesh, false);
         return mesh;
+    }
+
+    void ViewWindow::imageDrawText(Image& image, const char* text, float fontSize, Color color) {
+        int defaultFontSize = 10;
+        if (fontSize < defaultFontSize)
+            fontSize = defaultFontSize;
+        int spacing = fontSize / defaultFontSize;
+        Font font = LoadFont("app/fonts/font.ttf");
+        Vector2 textSize = MeasureTextEx(font, text, fontSize, spacing);
+        ImageDrawTextEx(
+            &image,
+            font,
+            text,
+            {
+                image.width / 2 - textSize.x / 2,
+                image.height / 2 - textSize.y / 2,
+            },
+            fontSize,
+            spacing,
+            color
+        );
     }
 }
