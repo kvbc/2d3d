@@ -22,6 +22,7 @@ namespace App {
         void Update();
 
         static Color GetRandomColor();
+        static WindingOrder GetReversedWindingOrder(WindingOrder windingOrder);
         static WindingOrder DetermineWindingOrder2D(const std::vector<Vector2>& points);
 
         Shape& GetShape(size_t idx);

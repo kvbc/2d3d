@@ -24,6 +24,13 @@ namespace App {
         return colors[GetRandomValue(0, colors.size() - 1)];
     }
 
+    App::WindingOrder App::GetReversedWindingOrder(App::WindingOrder windingOrder) {
+        return
+            (windingOrder == WindingOrder::CLOCKWISE)
+            ? WindingOrder::COUNTER_CLOCKWISE
+            : WindingOrder::CLOCKWISE;
+    }
+
     App::WindingOrder App::DetermineWindingOrder2D(const std::vector<Vector2>& points) {
         // magic
         // https://stackoverflow.com/a/1165943/21398468

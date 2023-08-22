@@ -384,21 +384,33 @@ namespace App {
         shape.AddVertex(vertex2);
 
         // Add faces
+        // TODO: clean up this garbage
         if(isShapeComplete(shape)) {
             std::vector<Vector2> points = getShapePoints(shape);
 
+            App::WindingOrder windingOrder = App::WindingOrder::COUNTER_CLOCKWISE;
+            if(
+                (m_view == View::Top) ||
+                (m_view == View::Left) ||
+                (m_view == View::Back)
+            ) {
+                windingOrder = App::WindingOrder::CLOCKWISE;
+            }
+            App::WindingOrder placeWindingOrder = App::DetermineWindingOrder2D(points); // order the points have been placed in
+            if (placeWindingOrder == App::WindingOrder::COUNTER_CLOCKWISE)
+                windingOrder = App::GetReversedWindingOrder(windingOrder);
+
             Shape::Face frontFace, backFace;
-            for(size_t i = 0; i < points.size(); i++) { // CCW
+            for(size_t i = 0; i < points.size(); i++) { // the points are assumed to be placed in CW order
                 frontFace.push_back(i * 2);
                 backFace.push_back(i * 2 + 1);
             }
 
-            App::WindingOrder placeWindingOrder = App::DetermineWindingOrder2D(points); // order the points have been placed in
-            if(placeWindingOrder == App::WindingOrder::CLOCKWISE) {
-                std::reverse(frontFace.begin(), frontFace.end());
+            if(windingOrder == App::WindingOrder::CLOCKWISE) {
+                std::reverse(backFace.begin(), backFace.end());
             }
             else {
-                std::reverse(backFace.begin(), backFace.end());
+                std::reverse(frontFace.begin(), frontFace.end());
             }
 
             shape.AddFace(frontFace, Vector3Negate(getViewDirection()));
@@ -410,6 +422,8 @@ namespace App {
                 edgeFace.push_back(i * 2);
                 edgeFace.push_back(i * 2 + 1);
                 edgeFace.push_back((i - 1) * 2 + 1);
+                if (windingOrder == App::WindingOrder::CLOCKWISE)
+                    std::reverse(edgeFace.begin(), edgeFace.end());
                 shape.AddFace(edgeFace, getViewDirection());
             }
         }
