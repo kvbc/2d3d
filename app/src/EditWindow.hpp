@@ -39,14 +39,10 @@ namespace App {
             ADDING
         };
 
-        // Shape
-        bool canAddShapePoint(const Shape& shape, Vector2 point) const;
-        void addShapePoint(Shape& shape, Vector2 point);
-        bool isShapeComplete(const Shape& shape) const;
-        std::vector<Vector2> getShapePoints(const Shape& shape) const;
-        std::vector<Vector2> getShapeFacePoints(const Shape& shape, const Shape::Face& face) const;
-        // void removeShapePoint(Shape& shape, Vector2 point);
-        
+        // Adding Shape
+        bool addAddingShapePoint(Vector2 point);
+        bool canAddAddingShapePoint(Vector2 point) const;
+
         // Coordinates
         Vector3 getViewDirection() const;
         Vector3 getPointToVertex(Vector2 v) const;
@@ -55,14 +51,18 @@ namespace App {
         Vector2 getWorldToGridPosition(Vector2 worldPosition) const;
         Vector2 getGridToWorldPosition(Vector2 gridPosition) const;
         Vector2 getMouseGridPosition() const;
+        std::vector<Vector2> getVertexToPointArray(const std::vector<Vector3>& vertices) const;
         
         void resetCamera(bool redraw);
 
         // Draw
-        void drawTexture();
-        void drawScene();
         void drawWindow();
+        void drawScene();
+        void drawTexture();
+        void drawEdge(Vector2 p1, Vector2 p2, Color color);
+        void drawPoint(Vector2 gridPoint, Color color);
 
+        std::vector<Vector2> m_addingShapePoints;
         View m_view;
         State m_state;
         Camera2D m_camera;

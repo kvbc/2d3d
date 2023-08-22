@@ -28,13 +28,12 @@ namespace App {
         return instance;
     }
 
-    void Tesselator::Tesselate2D(const std::vector<Vector2>& points, std::vector<Vector2>& outPoints) {
-        outPoints.clear();
+    std::vector<Vector2> Tesselator::Tesselate2D(const std::vector<Vector2>& points) {
+        std::vector<Vector2> outPoints;
 
-        // magic to determine the winding order
-        // https://stackoverflow.com/a/1165943/21398468
-        // App::WindingOrder windingOrder = App::DetermineWindingOrder2D(points);
-        // tessSetOption(m_tess, TESS_REVERSE_CONTOURS, windingOrder == App::WindingOrder::CLOCKWISE ? 0 : 1); // reverse when counter-clockwise
+        //App::WindingOrder windingOrder = App::DetermineWindingOrder2D(points);
+        //assert(windingOrder == App::WindingOrder::COUNTER_CLOCKWISE);
+        //tessSetOption(m_tess, TESS_REVERSE_CONTOURS, windingOrder == App::WindingOrder::CLOCKWISE ? 0 : 1); // reverse when counter-clockwise
 
         std::vector<float> floatPoints;
         for(const Vector2& point : points) {
@@ -57,6 +56,8 @@ namespace App {
                 outPoints.push_back({x, y});
             }
         }
+
+        return outPoints;
     }
 
     std::vector<Vector3> Tesselator::Tesselate3D(const std::vector<Vector3>& vertices) {

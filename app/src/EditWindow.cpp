@@ -41,9 +41,9 @@ namespace App {
                 int dy = lastMousePos.y - mousePos.y;
                 if(dx == 0 && dy == 0) {
                     Vector2 mouseGridPoint = getMouseGridPosition();
-                    if(canAddShapePoint(shape, mouseGridPoint)) {
-                        addShapePoint(shape, mouseGridPoint);
-                        if(isShapeComplete(shape))
+                    if(canAddAddingShapePoint(mouseGridPoint)) {
+                        bool isComplete = addAddingShapePoint(mouseGridPoint);
+                        if(isComplete)
                             m_state = State::NONE;
                     }
                 }
@@ -126,6 +126,15 @@ namespace App {
         }
         assert(false);
         return {};
+    }
+
+    std::vector<Vector2> EditWindow::getVertexToPointArray(const std::vector<Vector3>& vertices) const {
+        std::vector<Vector2> points;
+        for(Vector3 vertex : vertices) {
+            Vector2 point = getVertexToPoint(vertex);
+            points.push_back(point);
+        }
+        return points;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -286,21 +295,14 @@ namespace App {
         // Draw shapes
         for(size_t shapeIdx = 0; shapeIdx < App::Get().GetShapeCount(); shapeIdx++) {
             Shape& shape = App::Get().GetShape(shapeIdx);
-            Vector2 mouseGridPoint = getMouseGridPosition();
-            bool canAddPoint = canAddShapePoint(shape, mouseGridPoint);
-            std::vector<Vector2> points = getShapePoints(shape);
-            size_t mousePointIndex = points.size();
-            if(!isShapeComplete(shape))
-                points.push_back(mouseGridPoint);
 
-            // Draw fill
-            if(isShapeComplete(shape)) {
-                for(const Shape::Face& face : shape.GetFaces()) {
-                    std::vector<Vector2> gridPoints = getShapeFacePoints(shape, face);
-                    gridPoints.pop_back();
-                    std::vector<Vector2> tessGridPoints;
-                    Tesselator::Get().Tesselate2D(gridPoints, tessGridPoints);
+            // Draw faces
+            for(const Shape::Face& face : shape.GetFaces()) {
+                std::vector<Vector2> faceGridPoints = getVertexToPointArray(shape.GetFaceVertices(face));
 
+                // Draw fill
+                {
+                    std::vector<Vector2> tessGridPoints = Tesselator::Get().Tesselate2D(faceGridPoints);
                     std::vector<Vector2> tessWorldPoints;
                     for(const Vector2& gridPoint : tessGridPoints) {
                         Vector2 worldPoint = getGridToWorldPosition(gridPoint);
@@ -326,82 +328,100 @@ namespace App {
                         );
                     }
                 }
+
+                // Draw lines (connections)
+                for(size_t i = 1; i < faceGridPoints.size(); i++) {
+                    drawEdge(faceGridPoints[i - 1], faceGridPoints[i], GOLD);
+                }
+
+                // Draw points
+                for(size_t i = 0; i < faceGridPoints.size(); i++) {
+                    drawPoint(faceGridPoints[i], GOLD);
+                }
             }
 
-            // Draw lines (connections)
-            for(size_t i = 1; i < points.size(); i++) {
-                Vector2 gridPoint = points[i];
-                Vector2 prevGridPoint = points[i-1];
-                Vector2 prevWorldPoint = getGridToWorldPosition(prevGridPoint);
-                Vector2 worldPoint = getGridToWorldPosition(gridPoint);
-                Color color = {50, 50, 50, 255};
-                if(i == mousePointIndex) {
-                    if(!canAddPoint)
-                        color = RED;
-                    color.a /= 2;
-                }
-                DrawLineEx(prevWorldPoint, worldPoint, GRID_THICKNESS_PX, color);
-            }
+        }
+        
+        if(m_state == State::ADDING) {
+            Vector2 mouseGridPoint = getMouseGridPosition();
+            Color color = GOLD;
+            if (!canAddAddingShapePoint(mouseGridPoint))
+                color  = RED;
+            color.a /= 2;
 
-            // Draw circles
-            for(size_t i = 0; i < points.size(); i++) {
-                Vector2 gridPoint = points[i];
-                Vector2 worldPoint = getGridToWorldPosition(gridPoint);
-                Color color = GOLD;
-                if(i == mousePointIndex) {
-                    if(!canAddPoint)
-                        color = RED;
-                    color.a /= 2;
-                }
-                DrawCircle(worldPoint.x, worldPoint.y, GRID_CELL_SIZE_PX / 4, color);
-            }
+            for(size_t i = 1; i < m_addingShapePoints.size(); i++)
+                drawEdge(m_addingShapePoints[i-1], m_addingShapePoints[i], color);
+            if (!m_addingShapePoints.empty())
+                drawEdge(m_addingShapePoints.back(), mouseGridPoint, color);
+            drawPoint(mouseGridPoint, color);
         }
 
         EndMode2D();
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
-    //
-    // [Private] Shape
-    //
-    //
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    bool EditWindow::canAddShapePoint(const Shape& shape, Vector2 point) const {
-        std::vector<Vector2> points = getShapePoints(shape);
-        for(size_t i = 1; i < points.size(); i++) // skip 1st check
-            if(Vector2Equals(points[i], point))
-                return false;
-        return true;
+    void EditWindow::drawEdge(Vector2 gridPoint1, Vector2 gridPoint2, Color color) {
+        Vector2 worldPoint1 = getGridToWorldPosition(gridPoint1);
+        Vector2 worldPoint2 = getGridToWorldPosition(gridPoint2);
+        DrawLineEx(worldPoint1, worldPoint2, GRID_THICKNESS_PX, color);
     }
 
-    void EditWindow::addShapePoint(Shape& shape, Vector2 point) {
-        Vector3 vertex = getPointToVertex(point);
-        Vector3 vertex1 = Vector3Subtract(vertex, getViewDirection());
-        Vector3 vertex2 = Vector3Add(vertex1, getViewDirection());
-        shape.AddVertex(vertex1);
-        shape.AddVertex(vertex2);
+    void EditWindow::drawPoint(Vector2 gridPoint, Color color) {
+        Vector2 worldPoint = getGridToWorldPosition(gridPoint);
+        DrawCircle(worldPoint.x, worldPoint.y, GRID_CELL_SIZE_PX / 4, color);
+    }
 
-        // Add faces
-        // TODO: clean up this garbage
-        if(isShapeComplete(shape)) {
-            std::vector<Vector2> points = getShapePoints(shape);
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    //
+    // [Private] Adding Shape
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    bool EditWindow::canAddAddingShapePoint(Vector2 point) const {
+        if (!m_addingShapePoints.empty())
+            if (Vector2Equals(m_addingShapePoints[0], point))
+                return true;
+        return !std::any_of(m_addingShapePoints.begin(), m_addingShapePoints.end(), [=](Vector2 hadPoint) {
+            return Vector2Equals(hadPoint, point);
+            });
+    }
+
+    bool EditWindow::addAddingShapePoint(Vector2 newPoint) {
+        assert(canAddAddingShapePoint(newPoint));
+
+        bool isComplete = !m_addingShapePoints.empty() && Vector2Equals(m_addingShapePoints[0], newPoint);
+        if(!isComplete) {
+            m_addingShapePoints.push_back(newPoint);
+        } else { // complete
+            Shape shape;
+
+            // Add vertices
+            for(Vector2 point : m_addingShapePoints) {
+                Vector3 vertex = getPointToVertex(point);
+                Vector3 vertexFront = Vector3Subtract(vertex, getViewDirection());
+                Vector3 vertexBack = Vector3Add(vertexFront, getViewDirection());
+                shape.AddVertex(vertexFront);
+                shape.AddVertex(vertexBack);
+            }
+
+            // Add faces
+            // TODO: clean up this garbage
 
             App::WindingOrder windingOrder = App::WindingOrder::COUNTER_CLOCKWISE;
             if(
                 (m_view == View::Top) ||
                 (m_view == View::Left) ||
                 (m_view == View::Back)
-            ) {
+                ) {
                 windingOrder = App::WindingOrder::CLOCKWISE;
             }
-            App::WindingOrder placeWindingOrder = App::DetermineWindingOrder2D(points); // order the points have been placed in
+            App::WindingOrder placeWindingOrder = App::DetermineWindingOrder2D(m_addingShapePoints); // order the points have been placed in
             if (placeWindingOrder == App::WindingOrder::COUNTER_CLOCKWISE)
                 windingOrder = App::GetReversedWindingOrder(windingOrder);
 
             Shape::Face frontFace, backFace;
-            for(size_t i = 0; i < points.size(); i++) { // the points are assumed to be placed in CW order
+            for(size_t i = 0; i < m_addingShapePoints.size(); i++) { // the points are assumed to be placed in CW order
                 frontFace.push_back(i * 2);
                 backFace.push_back(i * 2 + 1);
             }
@@ -416,7 +436,7 @@ namespace App {
             shape.AddFace(frontFace, Vector3Negate(getViewDirection()));
             shape.AddFace(backFace, getViewDirection());
 
-            for(size_t i = 1; i < points.size(); i++) {
+            for(size_t i = 1; i < m_addingShapePoints.size(); i++) {
                 Shape::Face edgeFace;
                 edgeFace.push_back((i - 1) * 2);
                 edgeFace.push_back(i * 2);
@@ -426,54 +446,13 @@ namespace App {
                     std::reverse(edgeFace.begin(), edgeFace.end());
                 shape.AddFace(edgeFace, getViewDirection());
             }
-        }
-    }
 
-    std::vector<Vector2> EditWindow::getShapeFacePoints(const Shape& shape, const Shape::Face& face) const {
-        std::vector<Vector2> points;
-        for(Vector3 vertex : shape.GetFaceVertices(face)) {
-            Vector2 point = getVertexToPoint(vertex);
-            points.push_back(point);
-        }
-        return points;
-    }
+            App::Get().PushShape(shape);
 
-    bool EditWindow::isShapeComplete(const Shape& shape) const {
-        const std::vector<Vector2>& points = getShapePoints(shape);
-        return
-            (points.size() > 2) &&
-            Vector2Equals(points.front(), points.back());
-    }
-
-    std::vector<Vector2> EditWindow::getShapePoints(const Shape& shape) const {
-        std::vector<Vector2> points;
-        const std::vector<Vector3>& vertices = shape.GetVertices();
-
-        for(Vector3 vertex : vertices) {
-            Vector2 point = getVertexToPoint(vertex);
-            if(std::any_of(points.begin(), points.end(), [=](Vector2 alrPoint) {
-                return Vector2Equals(alrPoint, point);
-                }))
-                continue;
-                points.push_back(point);
+            m_addingShapePoints.clear();
         }
 
-        if(!points.empty()) {
-            Vector3 lastVertex = vertices.back();
-            Vector2 lastVertexPoint = getVertexToPoint(lastVertex);
-            if(Vector2Equals(lastVertexPoint, points[0]))
-                points.push_back(lastVertexPoint);
-        }
-
-        return points;
+        return isComplete;
     }
-
-    // void EditWindow::removeShapePoint(Shape& shape, Vector2 point) {
-    //     for(Vector3 vertex : shape.GetVertices()) {
-    //         Vector2 vertexPoint = getVertexToPoint(vertex);
-    //         if(Vector2Equals(vertexPoint, point))
-    //             shape.RemoveVertex(vertex);
-    //     }
-    // }
 
 }
