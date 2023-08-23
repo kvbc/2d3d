@@ -30,6 +30,9 @@ namespace App {
     }
 
     void EditWindow::Update() {
+        // todo the Y is flipped
+        std::cout << getMouseGridPosition().x << ", " << getMouseGridPosition().y << std::endl;
+
         if(m_state == State::ADDING) {
             Shape& shape = App::Get().GetShape(App::Get().GetShapeCount() - 1);
             static Vector2 lastMousePos;
@@ -91,9 +94,9 @@ namespace App {
     Vector3 EditWindow::getPointToVertex(Vector2 v) const {
         switch(m_view) {
             case View::Right :
-            case View::Left  : return {0, v.x, v.y};
+            case View::Left  : return {0, v.y, v.x};
             case View::Top   :
-            case View::Bottom: return {v.x, 0, v.y};
+            case View::Bottom: return {v.y, 0, v.x};
             case View::Front :
             case View::Back  : return {v.x, v.y, 0};
         }
@@ -104,9 +107,9 @@ namespace App {
     Vector2 EditWindow::getVertexToPoint(Vector3 v) const {
         switch(m_view) {
             case View::Right :
-            case View::Left  : return {v.y, v.z};
+            case View::Left  : return {v.z, v.y};
             case View::Top   :
-            case View::Bottom: return {v.x, v.z};
+            case View::Bottom: return {v.z, v.x};
             case View::Front :
             case View::Back  : return {v.x, v.y};
         }
@@ -251,9 +254,8 @@ namespace App {
     }
 
     void EditWindow::drawTexture() {
-        BeginMode2D(m_camera);
-
         ClearBackground(BLACK);
+        BeginMode2D(m_camera);
 
         // Draw grid
         {
