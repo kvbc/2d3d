@@ -1,1 +1,1 @@
-"_bin/Debug/app"
+"build/2d3d"

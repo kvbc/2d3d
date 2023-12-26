@@ -1,9 +1,4 @@
-raylib/
-_bin/
-_build/
-rlImGui/
+build/
 imgui.ini
-Makefile
 libtess2/
 .vscode/
-.vs/
