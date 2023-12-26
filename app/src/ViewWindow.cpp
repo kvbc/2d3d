@@ -149,8 +149,8 @@ namespace App {
         // we gotta flip the texture on the Y axis for some reason (?)
         DrawTexturePro(
             m_orientModelRTxt.texture,
-            {0, 0, m_orientModelRTxt.texture.width, m_orientModelRTxt.texture.height * -1},
-            {0, 0, m_orientModelRTxt.texture.width, m_orientModelRTxt.texture.height},
+            {0, 0, (float)m_orientModelRTxt.texture.width, (float)m_orientModelRTxt.texture.height * -1},
+            {0, 0, (float)m_orientModelRTxt.texture.width, (float)m_orientModelRTxt.texture.height},
             {0, 0},
             0,
             WHITE

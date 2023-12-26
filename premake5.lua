@@ -1,3 +1,4 @@
+toolset "clang"
 
 newoption
 {

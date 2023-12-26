@@ -34,7 +34,7 @@ namespace App {
         }
         ImVec2 size = ImGui::GetContentRegionAvail();
         // TODO: why this -1 here?
-        Rectangle sourceRect = {0, 0, m_renderTexture.texture.width, -1 * m_renderTexture.texture.height};
+        Rectangle sourceRect = {0, 0, (float)m_renderTexture.texture.width, -1.0f * m_renderTexture.texture.height};
         rlImGuiImageRect(&m_renderTexture.texture, size.x, size.y, sourceRect);
     }
 
