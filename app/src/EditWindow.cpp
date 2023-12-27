@@ -31,8 +31,7 @@ namespace App {
     }
 
     void EditWindow::Update() {
-        // todo the Y is flipped
-        std::cout << getMouseGridPosition().x << ", " << getMouseGridPosition().y << std::endl;
+        // TODO: the Y mouse position is flipped
 
         if(m_state == State::ADDING) {
             Shape& shape = App::Get().GetShape(App::Get().GetShapeCount() - 1);
@@ -95,11 +94,11 @@ namespace App {
     Vector3 EditWindow::getPointToVertex(Vector2 v) const {
         switch(m_view) {
             case View::Right :
-            case View::Left  : return {0, v.y, v.x};
+            case View::Left  : return {0, -v.y, v.x};
             case View::Top   :
             case View::Bottom: return {v.y, 0, v.x};
             case View::Front :
-            case View::Back  : return {v.x, v.y, 0};
+            case View::Back  : return {v.x, -v.y, 0};
         }
         assert(false);
         return {};
@@ -108,11 +107,11 @@ namespace App {
     Vector2 EditWindow::getVertexToPoint(Vector3 v) const {
         switch(m_view) {
             case View::Right :
-            case View::Left  : return {v.z, v.y};
+            case View::Left  : return {v.z, -v.y};
             case View::Top   :
             case View::Bottom: return {v.z, v.x};
             case View::Front :
-            case View::Back  : return {v.x, v.y};
+            case View::Back  : return {v.x, -v.y};
         }
         assert(false);
         return {};

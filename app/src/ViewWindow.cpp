@@ -201,6 +201,6 @@ namespace App {
     }
 
     void ViewWindow::loadOrientationModel() {
-        m_orientModel = LoadModel("app/assets/car.glb");
+        m_orientModel = LoadModel("../app/assets/car.glb");
     }
 }

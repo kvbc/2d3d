@@ -33,7 +33,8 @@ namespace App {
             EndTextureMode();
         }
         ImVec2 size = ImGui::GetContentRegionAvail();
-        // TODO: why this -1 here?
+        // opengl uses bottom-left coordinate system and raylib uses top-right,
+        // flip the render texture on Y
         Rectangle sourceRect = {0, 0, (float)m_renderTexture.texture.width, -1.0f * m_renderTexture.texture.height};
         rlImGuiImageRect(&m_renderTexture.texture, size.x, size.y, sourceRect);
     }

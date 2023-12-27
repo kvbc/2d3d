@@ -8,14 +8,14 @@
 namespace App {
 
     // 
-    // PUblic
+    // Public
     // 
 
     Shape::Shape() {
         m_model = { 0 };
         m_model.transform = MatrixIdentity();
         m_model.materialCount = 1;
-        m_model.materials = new Material[1];
+        m_model.materials = (Material*)MemAlloc(sizeof(Material));
         m_model.materials[0] = LoadMaterialDefault();
         // addMesh(GenMeshCube(3, 3, 3));
     }
@@ -95,7 +95,7 @@ namespace App {
     }
 
     const Vector3& Shape::GetVertex(size_t idx) const {
-        return m_vertices[idx];
+        return m_vertices.at(idx);
     }
 
     // void Shape::RemoveVertex(Vector3 vertex) {
@@ -121,16 +121,15 @@ namespace App {
     // 
 
     void Shape::addMesh(Mesh mesh) {
-        static std::vector<Mesh> meshes;
-        static std::vector<int> meshMaterials;
+        size_t idx = m_model.meshCount;
 
-        meshes.push_back(mesh);
-        meshMaterials.push_back(0); // first material
+        m_model.meshCount++;
+        m_model.meshes = (Mesh*)MemRealloc(m_model.meshes, sizeof(Mesh) * m_model.meshCount);
+        m_model.meshMaterial = (int*)MemRealloc(m_model.meshMaterial, sizeof(int) * m_model.meshCount);
 
-        m_model.meshCount = meshes.size();
-        m_model.meshes = meshes.data();
-        m_model.meshMaterial = meshMaterials.data();
+        m_model.meshes[idx] = mesh;
+        m_model.meshMaterial[idx] = 0; // first (default) material
 
-        // UploadMesh(&mesh, false);
+        //UploadMesh(&mesh, false);
     }
 }

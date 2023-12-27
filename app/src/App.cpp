@@ -47,7 +47,7 @@ namespace App {
     // Shape
 
     Shape& App::GetShape(size_t idx) {
-        return m_shapes[idx];
+        return m_shapes.at(idx);
     }
 
     size_t App::GetShapeCount() const {

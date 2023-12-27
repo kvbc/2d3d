@@ -11,7 +11,7 @@
 
 int main() {
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
-    InitWindow(1900, 900, "raylib [ImGui] example - ImGui Demo");
+    InitWindow(1920, 1080, "2d3d");
     rlImGuiSetup(true);
 
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
